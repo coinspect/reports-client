@@ -1,0 +1,35 @@
+{
+  "name": "reports-client",
+  "version": "0.0.1",
+  "description": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "test": "jest test/*.ts --verbose",
+    "lint": "eslint src --ext ts",
+    "clean": "rm -rf dist",
+    "build": "tsc --outDir dist",
+    "dev": "tsc --watch",
+    "prepare": "npm run build",
+    "check-format": "prettier --check src",
+    "format": "prettier --write src && npm run lint -- --fix",
+    "test-file": "jest $FILE --collectCoverage false"
+  },
+  "keywords": [],
+  "author": "emi",
+  "license": "ISC",
+  "dependencies": {
+    "firebase": "^9.9.4",
+    "typescript": "^4.7.4"
+  },
+  "devDependencies": {
+    "@types/jest": "^28.1.6",
+    "@types/node": "^18.6.5",
+    "@typescript-eslint/eslint-plugin": "^5.31.0",
+    "@typescript-eslint/parser": "^5.31.0",
+    "eslint": "^8.20.0",
+    "jest": "^28.1.3",
+    "prettier": "^2.7.1",
+    "ts-jest": "^28.0.7"
+  }
+}
