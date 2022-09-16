@@ -6,6 +6,7 @@
     "lib": [
       "ES2020"
     ],
+    "resolveJsonModule":true,
     "allowJs": true,
     "checkJs": false,
     "esModuleInterop": true,

@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "test": "jest test/*.ts --verbose",
+    "unit-test": "jest test/*.ts --verbose --forceExit",
     "lint": "eslint src --ext ts",
     "clean": "rm -rf dist",
     "build": "tsc --outDir dist",
@@ -13,7 +13,9 @@
     "prepare": "npm run build",
     "check-format": "prettier --check src",
     "format": "prettier --write src && npm run lint -- --fix",
-    "test-file": "jest $FILE --collectCoverage false"
+    "test-file": "jest $FILE --collectCoverage false",
+    "export-test-data":"firebase emulators:export ./test-data --project dev",
+    "test":"firebase emulators:exec  --import ./test-data --project dev 'pnpm run unit-test'"
   },
   "keywords": [],
   "author": "emi",
