@@ -69,11 +69,31 @@ describe('api', () => {
   })
 
   describe('subscribe', () => {
+    it('should subscribe and unsubscribe to collection changes', async () => {
+      const originalData = await defaultCollection.list()
+      let changes = 0
+      const unsub = defaultCollection.subscribe(() => {
+        changes = changes + 1
+      })
+      expect(typeof unsub).toBe('function')
+      await defaultCollection.create({ name: `${Date.now()}` })
+      expect(changes).toBe(1)
+      await defaultCollection.create({ name: `${Date.now()}` })
+      expect(changes).toBe(2)
+      unsub()
+      await defaultCollection.create({ name: `${Date.now()}` })
+      const newData = await defaultCollection.list()
+      expect(changes).toBe(2)
+      expect(newData.length).toBe(originalData.length + changes + 1)
+    })
+  })
+
+  describe('subscribeDoc', () => {
     it('should subscribe and unsubscribe to doc changes', async () => {
       const data: { name?: string }[] = []
       const elements = await defaultCollection.list()
       const { id } = elements[0]
-      const unsub = await defaultCollection.subscribe(id, (doc) => {
+      const unsub = await defaultCollection.subscribeDoc(id, (doc) => {
         data.push({ ...doc })
       })
       expect(typeof unsub).toBe('function')

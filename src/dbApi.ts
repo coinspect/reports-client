@@ -38,7 +38,8 @@ export const dbApi = (db: Firestore) => {
     get: (id: string) => Promise<DbDoc | undefined>
     create: (data: DbDoc) => Promise<string>
     update: (id: string, data: {}) => Promise<void>
-    subscribe: (id: string, cb: (doc: {}) => void) => Promise<Unsubscribe>
+    subscribe: (cb: (doc: {}) => void) => Unsubscribe
+    subscribeDoc: (id: string, cb: (doc: {}) => void) => Promise<Unsubscribe>
     remove: (id: string) => Promise<void>
   }
 
@@ -73,7 +74,14 @@ export const dbApi = (db: Firestore) => {
         return getSnapData(snap)
       }
 
-      const subscribe = async (id: string, cb: Function) => {
+      const subscribe = (cb: Function) => {
+        const unsub = onSnapshot(col, () => {
+          cb(list())
+        })
+        return unsub
+      }
+
+      const subscribeDoc = async (id: string, cb: Function) => {
         const docr = await getDocRef(id)
         const unsub = onSnapshot(docr, (doc) => {
           cb(getSnapData(doc))
@@ -86,7 +94,7 @@ export const dbApi = (db: Firestore) => {
         await deleteDoc(docr)
       }
 
-      v[key] = { list, get, create, update, remove, subscribe }
+      v[key] = { list, get, create, update, remove, subscribe, subscribeDoc }
       return v
     },
     {}
