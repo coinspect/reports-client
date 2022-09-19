@@ -3,13 +3,13 @@ jobs:
   build:
     working_directory: ~/tmp
     docker:
-      - image: cimg/node:16.16.0
+      - image: cimg/node:current-browsers
 
     steps:
       - checkout
       - run:
-          name: install pnpm
-          command: curl -L https://pnpm.js.org/pnpm.js | node - add --global pnpm
+          name: Install firebase
+          command: curl -sL firebase.tools | bash
       - run:
           name: Install dependencies
           command: pnpm install
