@@ -72,7 +72,7 @@ describe('api', () => {
     it('should subscribe and unsubscribe to collection changes', async () => {
       const originalData = await defaultCollection.list()
       let changes = 0
-      const unsub = defaultCollection.subscribe(() => {
+      const unsub = await defaultCollection.subscribe(() => {
         changes = changes + 1
       })
       expect(typeof unsub).toBe('function')
@@ -93,7 +93,7 @@ describe('api', () => {
       const data: { name?: string }[] = []
       const elements = await defaultCollection.list()
       const { id } = elements[0]
-      const unsub = await defaultCollection.subscribeDoc(id, (doc) => {
+      const unsub = await defaultCollection.subscribeDoc(id, async (doc) => {
         data.push({ ...doc })
       })
       expect(typeof unsub).toBe('function')

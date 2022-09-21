@@ -76,7 +76,7 @@ export const dbApi = (db: Firestore) => {
 
       const subscribe = (cb: Function) => {
         const unsub = onSnapshot(col, () => {
-          cb(list())
+          cb()
         })
         return unsub
       }
