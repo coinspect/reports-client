@@ -15,6 +15,7 @@
     "format": "prettier --write src && npm run lint -- --fix",
     "test-file": "jest $FILE --collectCoverage false",
     "export-test-data":"firebase emulators:export ./test-data --project dev",
+    "emulators":"firebase emulators:start  --import ./test-data --project dev",
     "test":"firebase emulators:exec  --import ./test-data --project dev 'pnpm run unit-test'"
   },
   "keywords": [],
