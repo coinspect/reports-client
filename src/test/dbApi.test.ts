@@ -1,17 +1,15 @@
 import { dbApi, createApp, getDb } from '../dbApi'
 import { COLLECTIONS } from '../constants'
 import { connectFirestoreEmulator } from 'firebase/firestore'
-import * as firebaseConfig from '../../firebase.json'
-
-const projectId = firebaseConfig.projects.dev
-const dbPort = firebaseConfig.emulators.firestore.port
-
-const db = getDb(createApp({ projectId }))
-connectFirestoreEmulator(db, 'localhost', dbPort)
-const api = dbApi(db)
-const defaultCollection = api[COLLECTIONS.projects]
+import { projectId, dbPort,host } from './test-config'
 
 describe('api', () => {
+
+  const db = getDb(createApp({ projectId }))
+  connectFirestoreEmulator(db, host, dbPort)
+  const api = dbApi(db)
+  const defaultCollection = api[COLLECTIONS.projects]
+
   describe('list', () => {
     it('should get a documents list', async () => {
       const result = await defaultCollection.list()
