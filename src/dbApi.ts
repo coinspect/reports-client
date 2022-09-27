@@ -12,12 +12,14 @@ import {
   onSnapshot,
   deleteDoc,
   DocumentSnapshot,
-  Unsubscribe
+  Unsubscribe,
+  query
 } from 'firebase/firestore'
 
 // See: https://firebase.google.com/docs/web/learn-more#config-object
 
-export const createApp = (firebaseConfig: {}):FirebaseApp => initializeApp(firebaseConfig)
+export const createApp = (firebaseConfig: {}): FirebaseApp =>
+  initializeApp(firebaseConfig)
 
 export const getDb = (app: FirebaseApp) => getFirestore(app)
 

@@ -4,5 +4,6 @@ describe('Exports', () => {
   test('api should be exported', () => {
     expect(typeof x.api).toBe('function')
     expect(typeof x.createApi).toBe('function')
+    expect(typeof x.singInWithIdToken).toBe('function')
   })
 })
