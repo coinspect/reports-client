@@ -13,10 +13,11 @@
     "prepare": "npm run build",
     "check-format": "prettier --check src",
     "format": "prettier --write src && npm run lint -- --fix",
-    "test-file": "jest $FILE --collectCoverage false",
+    "unit-test-file": "jest $FILE --collectCoverage false",
     "export-test-data":"firebase emulators:export ./test-data --project dev",
     "emulators":"firebase emulators:start  --import ./test-data --project dev",
-    "test":"firebase emulators:exec  --import ./test-data --project dev 'pnpm run unit-test'"
+    "test":"firebase emulators:exec  --import ./test-data --project dev 'pnpm run unit-test'",
+    "test-file":"firebase emulators:exec  --import ./test-data --project dev 'pnpm run unit-test-file'"
   },
   "keywords": [],
   "author": "emi",
