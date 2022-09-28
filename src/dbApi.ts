@@ -16,6 +16,8 @@ import {
   query
 } from 'firebase/firestore'
 
+import { singInWithIdToken } from './auth'
+
 // See: https://firebase.google.com/docs/web/learn-more#config-object
 
 export const createApp = (firebaseConfig: {}): FirebaseApp =>
@@ -105,7 +107,11 @@ export const dbApi = (db: Firestore) => {
   return Object.freeze(collections)
 }
 
-export const createApi = (firebaseConfig: {}) =>
-  dbApi(getDb(createApp(firebaseConfig)))
+export const createApi = (firebaseConfig: {}) => {
+  const app = createApp(firebaseConfig)
+  const signIn = (idToken: any) => singInWithIdToken(app, idToken)
+  const api = dbApi(getDb(app))
+  return Object.freeze({ api, signIn })
+}
 
 export default dbApi
