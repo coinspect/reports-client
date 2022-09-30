@@ -79,7 +79,7 @@ describe('api', () => {
       await defaultCollection.create({ name: `${Date.now()}` })
       await defaultCollection.create({ name: `${Date.now()}` })
       const l = changes.length
-      expect(l > 2).toBe(true)
+      expect(l >= 2).toBe(true)
       unsub()
       await defaultCollection.create({ name: `${Date.now()}` })
       const newData = await defaultCollection.list()
@@ -105,7 +105,7 @@ describe('api', () => {
       name = Date.now()
       await defaultCollection.update(id, { name })
       const l = data.length
-      expect(l > 1).toBe(true)
+      expect(l >= 1).toBe(true)
       expect(data[1]?.name).toBe(name)
       unsub()
       await defaultCollection.update(id, { name: 'xxx' })
