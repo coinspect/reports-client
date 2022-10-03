@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "unit-test": "jest test/*.ts --verbose --forceExit",
+    "unit-test": "jest test/*.ts --runInBand --verbose --forceExit",
     "lint": "eslint src --ext ts",
     "clean": "rm -rf dist",
     "build": "tsc --outDir dist",
@@ -14,21 +14,23 @@
     "check-format": "prettier --check src",
     "format": "prettier --write src && npm run lint -- --fix",
     "unit-test-file": "jest $FILE --collectCoverage false",
-    "export-test-data":"firebase emulators:export ./test-data --project dev",
-    "emulators":"firebase emulators:start  --import ./test-data --project dev",
-    "test":"firebase emulators:exec  --import ./test-data --project dev 'pnpm run unit-test'",
-    "test-file":"firebase emulators:exec  --import ./test-data --project dev 'pnpm run unit-test-file'"
+    "export-test-data": "firebase emulators:export ./test-data --project dev",
+    "emulators": "firebase emulators:start  --import ./test-data --project dev",
+    "test": "firebase emulators:exec  --import ./test-data --project dev 'pnpm run unit-test'",
+    "test-file": "firebase emulators:exec  --import ./test-data --project dev 'pnpm run unit-test-file'"
   },
   "keywords": [],
   "author": "emi",
   "license": "ISC",
   "dependencies": {
     "firebase": "^9.9.4",
+    "node-fetch": "2",
     "typescript": "^4.7.4"
   },
   "devDependencies": {
     "@types/jest": "^28.1.6",
     "@types/node": "^18.6.5",
+    "@types/node-fetch": "^2.6.2",
     "@typescript-eslint/eslint-plugin": "^5.31.0",
     "@typescript-eslint/parser": "^5.31.0",
     "eslint": "^8.20.0",
