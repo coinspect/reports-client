@@ -1,10 +1,19 @@
-import { dbApi, createApp, getDb } from '../dbApi'
+import { dbApi, getDb, createApi, createApp } from '../dbApi'
 import { COLLECTIONS } from '../constants'
 import { connectFirestoreEmulator } from 'firebase/firestore'
-import { projectId, dbPort, host } from './test-config'
+import {
+  dbPort,
+  host,
+  app,
+  idToken,
+  firebaseConfig,
+  authPort
+} from './test-config'
+import { getAuth, connectAuthEmulator } from 'firebase/auth'
+import { testUserData } from './auth.test'
 
 describe('api', () => {
-  const db = getDb(createApp({ projectId }))
+  const db = getDb(app)
   connectFirestoreEmulator(db, host, dbPort)
   const api = dbApi(db)
   const defaultCollection = api[COLLECTIONS.projects]
@@ -111,6 +120,20 @@ describe('api', () => {
       await defaultCollection.update(id, { name: 'xxx' })
       expect(data.length).toBe(l)
       expect(data[1]?.name).toBe(name)
+    })
+  })
+})
+
+describe('createApi', () => {
+  const app = createApp(firebaseConfig)
+  const auth = getAuth(app)
+  connectAuthEmulator(auth, `http://${host}:${authPort}`)
+  const { signIn } = createApi(firebaseConfig, app)
+
+  describe('signIn', () => {
+    it('should return user info', async () => {
+      const result = await signIn(idToken)
+      testUserData(idToken, result)
     })
   })
 })

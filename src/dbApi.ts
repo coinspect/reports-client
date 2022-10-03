@@ -16,7 +16,8 @@ import {
   query
 } from 'firebase/firestore'
 
-import { singInWithIdToken } from './auth'
+import { singInWithIdToken, getUserDataFromCredential } from './auth'
+import { getAuth } from 'firebase/auth'
 
 // See: https://firebase.google.com/docs/web/learn-more#config-object
 
@@ -107,11 +108,45 @@ export const dbApi = (db: Firestore) => {
   return Object.freeze(collections)
 }
 
-export const createApi = (firebaseConfig: {}) => {
-  const app = createApp(firebaseConfig)
-  const signIn = (idToken: any) => singInWithIdToken(app, idToken)
+export const userDataSchema = {
+  email: '',
+  name: '',
+  idToken: '',
+  refreshToken: ''
+}
+
+export type UserData = { [K in keyof typeof userDataSchema]: string }
+
+export const createApi = (firebaseConfig?: {}, app?: FirebaseApp) => {
+  app = app || createApp(firebaseConfig as {})
+
+  const signIn = async (
+    idToken: string,
+    refreshToken?: string | undefined
+  ): Promise<UserData> => {
+    const credential = await singInWithIdToken(
+      app as FirebaseApp,
+      idToken,
+      refreshToken
+    )
+    const data = await getUserDataFromCredential(credential)
+
+    if (!data.email) {
+      return Promise.reject(new Error('Invalid email'))
+    }
+
+    if (!data.name) {
+      return Promise.reject(new Error('Invalid name'))
+    }
+
+    return data
+  }
+
   const api = dbApi(getDb(app))
-  return Object.freeze({ api, signIn })
+
+  const { signOut } = getAuth(app)
+
+  return Object.freeze({ api, signIn, signOut })
 }
 
 export default dbApi
