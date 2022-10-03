@@ -121,7 +121,7 @@ export const createApi = (firebaseConfig?: {}, app?: FirebaseApp) => {
   app = app || createApp(firebaseConfig as {})
 
   const signIn = async (
-    idToken: string,
+    idToken?: string | undefined,
     refreshToken?: string | undefined
   ): Promise<UserData> => {
     const credential = await singInWithIdToken(

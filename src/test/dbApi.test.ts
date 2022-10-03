@@ -11,6 +11,11 @@ import {
 } from './test-config'
 import { getAuth, connectAuthEmulator } from 'firebase/auth'
 import { testUserData } from './auth.test'
+import * as a from '../auth'
+
+afterEach(() => {
+  jest.clearAllMocks()
+})
 
 describe('api', () => {
   const db = getDb(app)
@@ -131,8 +136,17 @@ describe('createApi', () => {
   const { signIn } = createApi(firebaseConfig, app)
 
   describe('signIn', () => {
-    it('should return user info', async () => {
+    it('should signIn with an idToken and return user info', async () => {
       const result = await signIn(idToken)
+      testUserData(idToken, result)
+    })
+
+    it('should signIn with a refreshToken and return user info', async () => {
+      const { refreshToken } = await signIn(idToken)
+      jest
+        .spyOn(a, 'refreshIdToken')
+        .mockReturnValue(Promise.resolve({ idToken, refreshToken }))
+      const result = await signIn(undefined, refreshToken)
       testUserData(idToken, result)
     })
   })

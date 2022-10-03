@@ -15,8 +15,7 @@ const auth = getAuth(app)
 connectAuthEmulator(auth, `http://${host}:${authPort}`)
 
 afterEach(() => {
-  // restore the spy created with spyOn
-  jest.restoreAllMocks()
+  jest.resetAllMocks()
 })
 
 describe('singInWithIdToken', () => {
@@ -41,12 +40,12 @@ describe('Renew idToken', () => {
     const { refreshToken } = await a.getUserDataFromCredential(credential)
     const spy = jest
       .spyOn(a, 'refreshIdToken')
-      .mockReturnValue(Promise.resolve({ idToken: '', refreshToken }))
+      .mockReturnValue(Promise.resolve({ idToken: undefined, refreshToken }))
     const tries = 3
     try {
       const result = await a.singInWithIdToken(app, '', refreshToken, tries)
     } catch (error) {
-      expect(spy).toHaveBeenCalledTimes(tries)
+      expect(spy).toHaveBeenCalledTimes(tries * 2 + 1)
     }
   })
 })

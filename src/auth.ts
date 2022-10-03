@@ -12,7 +12,7 @@ const REFRESH_URL = 'https://securetoken.googleapis.com/v1/token'
 const getRefreshURL = (apiKey: string) => `${REFRESH_URL}?key=${apiKey}`
 
 type TokenResponse = {
-  idToken: string
+  idToken: string | undefined
   refreshToken: string
 }
 
@@ -50,27 +50,34 @@ export const getUserDataFromCredential = async (credential: UserCredential) => {
 
 export const singInWithIdToken = async (
   app: FirebaseApp,
-  idToken: string,
+  idToken?: string | undefined,
   refreshToken?: string | undefined,
   tries?: number | undefined
 ): Promise<UserCredential> => {
+  const { apiKey } = app.options
   try {
     if (tries === undefined) {
       tries = 1
     }
-    const credential = GoogleAuthProvider.credential(idToken)
+    if (!idToken && !refreshToken) {
+      throw new Error('Invalid tokens')
+    }
+    if (!idToken && refreshToken && apiKey) {
+      idToken = (await refreshIdToken(refreshToken, apiKey)).idToken
+    }
+
+    const credential = GoogleAuthProvider.credential(idToken, refreshToken)
     const auth = getAuth(app)
     const result = await signInWithCredential(auth, credential)
     return result
   } catch (err) {
-    const { apiKey } = app.options
     // TODO check if is an idToken error
     if (refreshToken && tries && apiKey) {
       const tokens = await refreshIdToken(refreshToken, apiKey)
       return singInWithIdToken(
         app,
         tokens.idToken,
-        tokens.refreshToken,
+        tokens.refreshToken || refreshToken,
         --tries
       )
     }
