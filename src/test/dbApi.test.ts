@@ -94,7 +94,7 @@ describe('api', () => {
   })
 
   describe('subscribe', () => {
-    let changes: number[] = []
+    const changes: number[] = []
     it('should subscribe and unsubscribe to collection changes', async () => {
       const originalData = await defaultCollection.list()
 
@@ -113,6 +113,27 @@ describe('api', () => {
       const newData = await defaultCollection.list()
       expect(changes.length).toBe(l)
       expect(newData.length >= originalData.length + l).toBe(true)
+    })
+
+    it('should subscribe a query to collection changes', async () => {
+      const changes: any[] = []
+      let c = 0
+      const name = 'xxxxxxxx'
+      const unsub = await api.test.subscribe(() => {
+        changes.push(c++)
+      }, ['name', '==', name])
+
+      await api.test.create({ name })
+      await api.test.create({ name: 'foo' })
+      await api.test.create({ name: 'bar' })
+      await api.test.create({ name })
+      await api.test.create({ name: 'baz' })
+      const l = changes.length
+      expect(l).toBe(2)
+      unsub()
+      await api.test.create({ name })
+      await api.test.create({ name })
+      expect(changes.length).toBe(l)
     })
   })
 
@@ -133,6 +154,7 @@ describe('api', () => {
       expect(data[0]?.name).toBe(name)
       name = Date.now()
       await defaultCollection.update(id, { name })
+      await wait(100)
       const l = data.length
       expect(l >= 1).toBe(true)
       expect(data[1]?.name).toBe(name)

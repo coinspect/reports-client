@@ -45,8 +45,11 @@ type WhereArgs = [FieldPath | string, WhereFilterOp, any]
 
 const createQuery = (
   collectionRef: CollectionReference,
-  whereArgs: WhereArgs
+  whereArgs?: WhereArgs | undefined
 ): Query => {
+  if (!whereArgs) {
+    return collectionRef
+  }
   const w = where(...whereArgs)
   const q = query(collectionRef, w)
   return q
@@ -62,7 +65,7 @@ export const dbApi = (db: Firestore, cols: CollectionList) => {
     get: (id: string) => Promise<DbDoc | undefined>
     create: (data: DbDoc) => Promise<string>
     update: (id: string, data: {}) => Promise<void>
-    subscribe: (cb: (doc: {}) => void) => Unsubscribe
+    subscribe: (cb: (doc: {}) => void, whereArgs?: WhereArgs) => Unsubscribe
     subscribeDoc: (id: string, cb: (doc: {}) => void) => Promise<Unsubscribe>
     remove: (id: string) => Promise<void>
   }
@@ -76,7 +79,7 @@ export const dbApi = (db: Firestore, cols: CollectionList) => {
       const getSnapshot = (id: string) => getDoc(getDocRef(id))
 
       const list = async (whereArgs?: undefined | WhereArgs) => {
-        const q = whereArgs ? createQuery(col, whereArgs) : col
+        const q = createQuery(col, whereArgs)
         const snp = await getDocs(q)
         return snp.docs.map((doc) => getSnapData(doc))
       }
@@ -99,8 +102,9 @@ export const dbApi = (db: Firestore, cols: CollectionList) => {
         return getSnapData(snap)
       }
 
-      const subscribe = (cb: Function) => {
-        const unsub = onSnapshot(col, () => {
+      const subscribe = (cb: Function, whereArgs?: WhereArgs) => {
+        const q = createQuery(col, whereArgs)
+        const unsub = onSnapshot(q, () => {
           cb()
         })
         return unsub
