@@ -20,7 +20,7 @@ afterEach(() => {
 describe('api', () => {
   const db = getDb(app)
   connectFirestoreEmulator(db, host, dbPort)
-  const api = dbApi(db)
+  const api = dbApi(db, { ...COLLECTIONS, test: 'test' })
   const defaultCollection = api[COLLECTIONS.projects]
 
   describe('list', () => {

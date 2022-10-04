@@ -52,7 +52,11 @@ const createQuery = (
   return q
 }
 
-export const dbApi = (db: Firestore) => {
+type CollectionList = {
+  [key: string]: string
+}
+
+export const dbApi = (db: Firestore, cols: CollectionList) => {
   type CollectionMethods = {
     list: (whereArgs?: WhereArgs | undefined) => Promise<any[]>
     get: (id: string) => Promise<DbDoc | undefined>
@@ -63,7 +67,7 @@ export const dbApi = (db: Firestore) => {
     remove: (id: string) => Promise<void>
   }
 
-  const collections = Object.entries(COLLECTIONS).reduce(
+  const collections = Object.entries(cols).reduce(
     (v: { [k: string]: CollectionMethods }, a) => {
       const [key, name] = a
       const col = collection(db, name)
@@ -133,8 +137,13 @@ export const userDataSchema = {
 
 export type UserData = { [K in keyof typeof userDataSchema]: string }
 
-export const createApi = (firebaseConfig?: {}, app?: FirebaseApp) => {
+export const createApi = (
+  firebaseConfig?: {},
+  app?: FirebaseApp | undefined,
+  collections?: CollectionList
+) => {
   app = app || createApp(firebaseConfig as {})
+  collections = collections || COLLECTIONS
 
   const signIn = async (idToken: string): Promise<UserData> => {
     try {
@@ -155,7 +164,7 @@ export const createApi = (firebaseConfig?: {}, app?: FirebaseApp) => {
     }
   }
 
-  const api = dbApi(getDb(app))
+  const api = dbApi(getDb(app), collections)
 
   const { signOut } = getAuth(app)
 
