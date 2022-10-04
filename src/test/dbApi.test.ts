@@ -170,7 +170,7 @@ describe('createApi', () => {
   const app = createApp(firebaseConfig)
   const auth = getAuth(app)
   connectAuthEmulator(auth, `http://${host}:${authPort}`)
-  const { signIn } = createApi(firebaseConfig, app)
+  const { signIn,signOut,cols } = createApi(firebaseConfig, app)
 
   describe('signIn', () => {
     it('should signIn with an idToken and return user info', async () => {
@@ -178,4 +178,5 @@ describe('createApi', () => {
       testUserData(idToken, result)
     })
   })
+
 })

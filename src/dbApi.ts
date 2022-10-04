@@ -59,17 +59,17 @@ type CollectionList = {
   [key: string]: string
 }
 
-export const dbApi = (db: Firestore, cols: CollectionList) => {
-  type CollectionMethods = {
-    list: (whereArgs?: WhereArgs | undefined) => Promise<any[]>
-    get: (id: string) => Promise<DbDoc | undefined>
-    create: (data: DbDoc) => Promise<string>
-    update: (id: string, data: {}) => Promise<void>
-    subscribe: (cb: (doc: {}) => void, whereArgs?: WhereArgs) => Unsubscribe
-    subscribeDoc: (id: string, cb: (doc: {}) => void) => Promise<Unsubscribe>
-    remove: (id: string) => Promise<void>
-  }
+export type CollectionMethods = {
+  list: (whereArgs?: WhereArgs | undefined) => Promise<any[]>
+  get: (id: string) => Promise<DbDoc | undefined>
+  create: (data: DbDoc) => Promise<string>
+  update: (id: string, data: {}) => Promise<void>
+  subscribe: (cb: (doc: {}) => void, whereArgs?: WhereArgs) => Unsubscribe
+  subscribeDoc: (id: string, cb: (doc: {}) => void) => Promise<Unsubscribe>
+  remove: (id: string) => Promise<void>
+}
 
+export const dbApi = (db: Firestore, cols: CollectionList) => {
   const collections = Object.entries(cols).reduce(
     (v: { [k: string]: CollectionMethods }, a) => {
       const [key, name] = a
@@ -145,7 +145,11 @@ export const createApi = (
   firebaseConfig?: {},
   app?: FirebaseApp | undefined,
   collections?: CollectionList
-) => {
+): Readonly<{
+  cols: Readonly<{ [key: string]: CollectionMethods }>
+  signIn: (idToken: string) => Promise<UserData>
+  signOut: Function
+}> => {
   app = app || createApp(firebaseConfig as {})
   collections = collections || COLLECTIONS
 
@@ -168,11 +172,11 @@ export const createApi = (
     }
   }
 
-  const api = dbApi(getDb(app), collections)
+  const cols = dbApi(getDb(app), collections)
 
   const { signOut } = getAuth(app)
 
-  return Object.freeze({ api, signIn, signOut })
+  return Object.freeze({ cols, signIn, signOut })
 }
 
 export default dbApi
