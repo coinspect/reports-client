@@ -13,7 +13,12 @@ import {
   deleteDoc,
   DocumentSnapshot,
   Unsubscribe,
-  query
+  query,
+  where,
+  CollectionReference,
+  WhereFilterOp,
+  FieldPath,
+  Query
 } from 'firebase/firestore'
 
 import { singInWithIdToken, getUserDataFromCredential } from './auth'
@@ -26,20 +31,30 @@ export const createApp = (firebaseConfig: {}): FirebaseApp =>
 
 export const getDb = (app: FirebaseApp) => getFirestore(app)
 
-const getSnapData = (snap: DocumentSnapshot): DbDoc | undefined => {
+const getSnapData = (snap: DocumentSnapshot): {} | undefined => {
   if (!snap || !snap.exists()) {
     return undefined
   }
   return { id: snap.id, ...snap.data() }
 }
 type DbDoc = {
-  id?: string
-  name?: string
+  [key: string]: any
+}
+
+type WhereArgs = [FieldPath | string, WhereFilterOp, any]
+
+const createQuery = (
+  collectionRef: CollectionReference,
+  whereArgs: WhereArgs
+): Query => {
+  const w = where(...whereArgs)
+  const q = query(collectionRef, w)
+  return q
 }
 
 export const dbApi = (db: Firestore) => {
   type CollectionMethods = {
-    list: () => Promise<any[]>
+    list: (whereArgs?: WhereArgs | undefined) => Promise<any[]>
     get: (id: string) => Promise<DbDoc | undefined>
     create: (data: DbDoc) => Promise<string>
     update: (id: string, data: {}) => Promise<void>
@@ -56,8 +71,9 @@ export const dbApi = (db: Firestore) => {
       const getDocRef = (id: string) => doc(db, name, id)
       const getSnapshot = (id: string) => getDoc(getDocRef(id))
 
-      const list = async () => {
-        const snp = await getDocs(col)
+      const list = async (whereArgs?: undefined | WhereArgs) => {
+        const q = whereArgs ? createQuery(col, whereArgs) : col
+        const snp = await getDocs(q)
         return snp.docs.map((doc) => getSnapData(doc))
       }
 

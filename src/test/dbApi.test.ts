@@ -7,11 +7,11 @@ import {
   app,
   idToken,
   firebaseConfig,
-  authPort
+  authPort,
+  wait
 } from './test-config'
 import { getAuth, connectAuthEmulator } from 'firebase/auth'
 import { testUserData } from './auth.test'
-import * as a from '../auth'
 
 afterEach(() => {
   jest.clearAllMocks()
@@ -24,12 +24,26 @@ describe('api', () => {
   const defaultCollection = api[COLLECTIONS.projects]
 
   describe('list', () => {
-    it('should get a documents list', async () => {
+    it('should get all documents list', async () => {
       const result = await defaultCollection.list()
       expect(Array.isArray(result)).toBe(true)
       expect(result.length).toBe(1)
       expect(result[0].name).toBe('testProject')
       expect(result[0].id).not.toBe(undefined)
+    })
+
+    it('should get a list of documents using a query', async () => {
+      const name = `xxx-${Date.now()}`
+      const c = 4
+      await Promise.all(
+        [...Array(c)].map((v, i) =>
+          defaultCollection.create({ name, test: `${i % 2}` })
+        )
+      )
+      let docs = await defaultCollection.list(['name', '==', name])
+      expect(docs.length).toBe(c)
+      docs = await defaultCollection.list(['test', '>', '0'])
+      expect(docs.length).toBe(c / 2)
     })
   })
 
@@ -98,7 +112,7 @@ describe('api', () => {
       await defaultCollection.create({ name: `${Date.now()}` })
       const newData = await defaultCollection.list()
       expect(changes.length).toBe(l)
-      expect(newData.length).toBe(originalData.length + l)
+      expect(newData.length >= originalData.length + l).toBe(true)
     })
   })
 
@@ -114,6 +128,7 @@ describe('api', () => {
       expect(data.length).toBe(0)
       let name = Date.now()
       await defaultCollection.update(id, { name })
+      await wait(100)
       expect(data.length > 0).toBe(true)
       expect(data[0]?.name).toBe(name)
       name = Date.now()
