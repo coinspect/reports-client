@@ -120,26 +120,23 @@ export type UserData = { [K in keyof typeof userDataSchema]: string }
 export const createApi = (firebaseConfig?: {}, app?: FirebaseApp) => {
   app = app || createApp(firebaseConfig as {})
 
-  const signIn = async (
-    idToken?: string | undefined,
-    refreshToken?: string | undefined
-  ): Promise<UserData> => {
-    const credential = await singInWithIdToken(
-      app as FirebaseApp,
-      idToken,
-      refreshToken
-    )
-    const data = await getUserDataFromCredential(credential)
+  const signIn = async (idToken: string): Promise<UserData> => {
+    try {
+      const credential = await singInWithIdToken(app as FirebaseApp, idToken)
+      const data = await getUserDataFromCredential(credential)
 
-    if (!data.email) {
-      return Promise.reject(new Error('Invalid email'))
+      if (!data.email) {
+        throw new Error('Invalid email')
+      }
+
+      if (!data.name) {
+        throw new Error('Invalid name')
+      }
+
+      return data
+    } catch (err) {
+      return Promise.reject(err)
     }
-
-    if (!data.name) {
-      return Promise.reject(new Error('Invalid name'))
-    }
-
-    return data
   }
 
   const api = dbApi(getDb(app))

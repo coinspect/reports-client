@@ -140,14 +140,5 @@ describe('createApi', () => {
       const result = await signIn(idToken)
       testUserData(idToken, result)
     })
-
-    it('should signIn with a refreshToken and return user info', async () => {
-      const { refreshToken } = await signIn(idToken)
-      jest
-        .spyOn(a, 'refreshIdToken')
-        .mockReturnValue(Promise.resolve({ idToken, refreshToken }))
-      const result = await signIn(undefined, refreshToken)
-      testUserData(idToken, result)
-    })
   })
 })

@@ -1,7 +1,6 @@
 import { connectAuthEmulator, getAuth } from 'firebase/auth'
-import { host, app, authPort, idToken, apiKey } from './test-config'
+import { host, app, authPort, idToken } from './test-config'
 import * as a from '../auth'
-import { UserData } from '../dbApi'
 
 export function testUserData(idToken: any, result: any) {
   const idTokenData = JSON.parse(idToken)
@@ -31,21 +30,5 @@ describe('getUserDataFromCredential', () => {
     const credential = await a.singInWithIdToken(app, idToken)
     const result = await a.getUserDataFromCredential(credential)
     testUserData(idToken, result)
-  })
-})
-
-describe('Renew idToken', () => {
-  it('should try to renew idToken', async () => {
-    const credential = await a.singInWithIdToken(app, idToken)
-    const { refreshToken } = await a.getUserDataFromCredential(credential)
-    const spy = jest
-      .spyOn(a, 'refreshIdToken')
-      .mockReturnValue(Promise.resolve({ idToken: undefined, refreshToken }))
-    const tries = 3
-    try {
-      const result = await a.singInWithIdToken(app, '', refreshToken, tries)
-    } catch (error) {
-      expect(spy).toHaveBeenCalledTimes(tries * 2 + 1)
-    }
   })
 })
