@@ -1,4 +1,3 @@
-import { rejects } from 'assert'
 import * as fbConfig from '../../firebase.json'
 import { createApp } from '../dbApi'
 
