@@ -1,4 +1,11 @@
-import { dbApi, getDb, createApi, createApp, groupApi } from '../dbApi'
+import {
+  dbApi,
+  getDb,
+  createApi,
+  createApp,
+  groupApi,
+  createSelect
+} from '../dbApi'
 import { COLLECTIONS } from '../constants'
 import { connectFirestoreEmulator } from 'firebase/firestore'
 import {
@@ -12,6 +19,7 @@ import {
 } from './test-config'
 import { getAuth, connectAuthEmulator } from 'firebase/auth'
 import { testUserData } from './auth.test'
+import exp from 'constants'
 
 afterEach(() => {
   jest.clearAllMocks()
@@ -26,7 +34,7 @@ describe('api', () => {
   describe('group', () => {
     const gApi = groupApi(db)
     const group = gApi('files')
-    
+
     it('should return a list of files', async () => {
       const result = await group.list()
       // Uncomplete
@@ -39,6 +47,18 @@ describe('api', () => {
       // Uncomplete
       expect(Array.isArray(result)).toBe(true)
       expect(result.length).toBe(1)
+    })
+  })
+
+  describe('select', () => {
+    it('should create a collection api from a path', async () => {
+      const colName = 'projects'
+      const data = await cols[colName].list()
+      const path = [colName, data[0].id, 'files']
+      const s = createSelect(db, path)
+      const result = await s.list()
+      expect(Array.isArray(result)).toBe(true)
+      expect(result.length).toBe(2)
     })
   })
 

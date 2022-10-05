@@ -123,6 +123,7 @@ export const collectionApi = (col: CollectionReference) => {
     const docr = await getDocRef(id)
     await deleteDoc(docr)
   }
+
   return Object.freeze({
     list,
     get,
@@ -155,10 +156,10 @@ export const userDataSchema = {
 
 export type UserData = { [K in keyof typeof userDataSchema]: string }
 
-export const groupApi = (db:Firestore) =>{
+export const groupApi = (db: Firestore) => {
   const group = (collectionId: string) => {
     const q = collectionGroup(db, collectionId)
-    
+
     const list = (whereArgs?: WhereArgs) =>
       listDocuments(createQuery(q, whereArgs))
     return Object.freeze({ list })
@@ -166,6 +167,10 @@ export const groupApi = (db:Firestore) =>{
   return group
 }
 
+export const createSelect = (db: Firestore, path: string[] | string) => {
+  path = Array.isArray(path) ? path.join('/') : path
+  return collectionApi(collection(db, path))
+}
 
 export const createApi = (
   firebaseConfig?: {},
@@ -204,9 +209,9 @@ export const createApi = (
 
   const { signOut } = getAuth(app)
   const group = groupApi(db)
+  const select = (path: string | string[]) => createSelect(db, path)
 
-
-  return Object.freeze({ cols, signIn, signOut, group })
+  return Object.freeze({ cols, signIn, signOut, group, select })
 }
 
 export default dbApi
