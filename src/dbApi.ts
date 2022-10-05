@@ -181,6 +181,8 @@ export const createApi = (
   signIn: (idToken: string) => Promise<UserData>
   signOut: Function
   group: Function
+  select: Function
+  onIdTokenChanged: Function
 }> => {
   app = app || createApp(firebaseConfig as {})
   collections = collections || COLLECTIONS
@@ -207,11 +209,18 @@ export const createApi = (
   const db = getDb(app)
   const cols = dbApi(db, collections)
 
-  const { signOut } = getAuth(app)
+  const { signOut, onIdTokenChanged } = getAuth(app)
   const group = groupApi(db)
   const select = (path: string | string[]) => createSelect(db, path)
 
-  return Object.freeze({ cols, signIn, signOut, group, select })
+  return Object.freeze({
+    cols,
+    signIn,
+    signOut,
+    group,
+    select,
+    onIdTokenChanged
+  })
 }
 
 export default dbApi
