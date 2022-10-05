@@ -69,66 +69,74 @@ export type CollectionMethods = {
   remove: (id: string) => Promise<void>
 }
 
+export const collectionApi = (col: CollectionReference) => {
+  const getDocRef = (id: string) => doc(col, id)
+  const getSnapshot = (id: string) => getDoc(getDocRef(id))
+
+  const list = async (whereArgs?: undefined | WhereArgs): Promise<any[]> => {
+    const q = createQuery(col, whereArgs)
+    const snp = await getDocs(q)
+    return snp.docs.map((doc) => getSnapData(doc))
+  }
+
+  const create = async (data: {}) => {
+    const ref = await addDoc(col, data)
+    return ref.id
+  }
+
+  const update = async (id: string, data: {}) => {
+    if (!id) {
+      throw new Error('Missing id')
+    }
+    const ref = doc(col, id)
+    const res = await updateDoc(ref, data)
+  }
+
+  const get = async (id: string): Promise<any> => {
+    const snap = await getSnapshot(id)
+    return getSnapData(snap)
+  }
+
+  const subscribe = (cb: Function, whereArgs?: WhereArgs) => {
+    const q = createQuery(col, whereArgs)
+    const unsub = onSnapshot(q, () => {
+      cb()
+    })
+    return unsub
+  }
+
+  const subscribeDoc = async (id: string, cb: Function) => {
+    const docr = await getDocRef(id)
+    const unsub = onSnapshot(docr, (doc) => {
+      cb(getSnapData(doc))
+    })
+    return unsub
+  }
+
+  const remove = async (id: string) => {
+    const docr = await getDocRef(id)
+    await deleteDoc(docr)
+  }
+  return Object.freeze({
+    list,
+    get,
+    create,
+    update,
+    remove,
+    subscribe,
+    subscribeDoc
+  })
+}
+
 export const dbApi = (db: Firestore, cols: CollectionList) => {
   const collections = Object.entries(cols).reduce(
     (v: { [k: string]: CollectionMethods }, a) => {
       const [key, name] = a
-      const col = collection(db, name)
-
-      const getDocRef = (id: string) => doc(db, name, id)
-      const getSnapshot = (id: string) => getDoc(getDocRef(id))
-
-      const list = async (whereArgs?: undefined | WhereArgs) => {
-        const q = createQuery(col, whereArgs)
-        const snp = await getDocs(q)
-        return snp.docs.map((doc) => getSnapData(doc))
-      }
-
-      const create = async (data: {}) => {
-        const ref = await addDoc(col, data)
-        return ref.id
-      }
-
-      const update = async (id: string, data: {}) => {
-        if (!id) {
-          throw new Error('Missing id')
-        }
-        const ref = doc(db, name, id)
-        const res = await updateDoc(ref, data)
-      }
-
-      const get = async (id: string) => {
-        const snap = await getSnapshot(id)
-        return getSnapData(snap)
-      }
-
-      const subscribe = (cb: Function, whereArgs?: WhereArgs) => {
-        const q = createQuery(col, whereArgs)
-        const unsub = onSnapshot(q, () => {
-          cb()
-        })
-        return unsub
-      }
-
-      const subscribeDoc = async (id: string, cb: Function) => {
-        const docr = await getDocRef(id)
-        const unsub = onSnapshot(docr, (doc) => {
-          cb(getSnapData(doc))
-        })
-        return unsub
-      }
-
-      const remove = async (id: string) => {
-        const docr = await getDocRef(id)
-        await deleteDoc(docr)
-      }
-
-      v[key] = { list, get, create, update, remove, subscribe, subscribeDoc }
+      v[key] = collectionApi(collection(db, name))
       return v
     },
     {}
   )
-
   return Object.freeze(collections)
 }
 
