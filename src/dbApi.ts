@@ -18,7 +18,8 @@ import {
   CollectionReference,
   WhereFilterOp,
   FieldPath,
-  Query
+  Query,
+  collectionGroup
 } from 'firebase/firestore'
 
 import { singInWithIdToken, getUserDataFromCredential } from './auth'
@@ -43,15 +44,18 @@ type DbDoc = {
 
 type WhereArgs = [FieldPath | string, WhereFilterOp, any]
 
+const createWhere = (whereArgs: WhereArgs | undefined) =>
+  whereArgs ? where(...whereArgs) : undefined
+
 const createQuery = (
-  collectionRef: CollectionReference,
+  ref: CollectionReference | Query,
   whereArgs?: WhereArgs | undefined
 ): Query => {
-  if (!whereArgs) {
-    return collectionRef
+  const w = createWhere(whereArgs)
+  if (!w) {
+    return ref
   }
-  const w = where(...whereArgs)
-  const q = query(collectionRef, w)
+  const q = query(ref, w)
   return q
 }
 
@@ -69,15 +73,17 @@ export type CollectionMethods = {
   remove: (id: string) => Promise<void>
 }
 
+const listDocuments = async (q: Query): Promise<any[]> => {
+  const snp = await getDocs(q)
+  return snp.docs.map((doc) => getSnapData(doc))
+}
+
 export const collectionApi = (col: CollectionReference) => {
   const getDocRef = (id: string) => doc(col, id)
   const getSnapshot = (id: string) => getDoc(getDocRef(id))
 
-  const list = async (whereArgs?: undefined | WhereArgs): Promise<any[]> => {
-    const q = createQuery(col, whereArgs)
-    const snp = await getDocs(q)
-    return snp.docs.map((doc) => getSnapData(doc))
-  }
+  const list = async (whereArgs?: undefined | WhereArgs): Promise<any[]> =>
+    listDocuments(createQuery(col, whereArgs))
 
   const create = async (data: {}) => {
     const ref = await addDoc(col, data)
@@ -149,6 +155,18 @@ export const userDataSchema = {
 
 export type UserData = { [K in keyof typeof userDataSchema]: string }
 
+export const groupApi = (db:Firestore) =>{
+  const group = (collectionId: string) => {
+    const q = collectionGroup(db, collectionId)
+    
+    const list = (whereArgs?: WhereArgs) =>
+      listDocuments(createQuery(q, whereArgs))
+    return Object.freeze({ list })
+  }
+  return group
+}
+
+
 export const createApi = (
   firebaseConfig?: {},
   app?: FirebaseApp | undefined,
@@ -157,6 +175,7 @@ export const createApi = (
   cols: Readonly<{ [key: string]: CollectionMethods }>
   signIn: (idToken: string) => Promise<UserData>
   signOut: Function
+  group: Function
 }> => {
   app = app || createApp(firebaseConfig as {})
   collections = collections || COLLECTIONS
@@ -180,11 +199,14 @@ export const createApi = (
     }
   }
 
-  const cols = dbApi(getDb(app), collections)
+  const db = getDb(app)
+  const cols = dbApi(db, collections)
 
   const { signOut } = getAuth(app)
+  const group = groupApi(db)
 
-  return Object.freeze({ cols, signIn, signOut })
+
+  return Object.freeze({ cols, signIn, signOut, group })
 }
 
 export default dbApi
