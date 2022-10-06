@@ -44,6 +44,8 @@ type DbDoc = {
 
 type WhereArgs = [FieldPath | string, WhereFilterOp, any]
 
+export const fieldPath = (...fieldNames: string[]) => new FieldPath(...fieldNames)
+
 const createWhere = (whereArgs: WhereArgs | undefined) =>
   whereArgs ? where(...whereArgs) : undefined
 
