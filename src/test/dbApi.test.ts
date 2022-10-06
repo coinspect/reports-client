@@ -4,10 +4,12 @@ import {
   createApi,
   createApp,
   groupApi,
-  createSelect
+  createSelect,
+  createWhere,
+  createQuery
 } from '../dbApi'
 import { COLLECTIONS } from '../constants'
-import { connectFirestoreEmulator } from 'firebase/firestore'
+import { connectFirestoreEmulator, QueryConstraint } from 'firebase/firestore'
 import {
   dbPort,
   host,
@@ -24,6 +26,22 @@ import exp from 'constants'
 afterEach(() => {
   jest.clearAllMocks()
 })
+
+describe('createWhere', () => {
+  it('should return a QueryConstraint', () => {
+    expect(createWhere(['xxx', '!=', 'test@user.com'])).toBeInstanceOf(
+      QueryConstraint
+    )
+    expect(createWhere(['test@user.com', '==', true])).toBeInstanceOf(
+      QueryConstraint
+    )
+  })
+  it('should return undefined', () => {
+    expect(createWhere(undefined)).toBeUndefined()
+  })
+})
+
+describe('createQuery', () => {})
 
 describe('api', () => {
   const db = getDb(app)

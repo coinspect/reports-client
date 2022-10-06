@@ -19,7 +19,8 @@ import {
   WhereFilterOp,
   FieldPath,
   Query,
-  collectionGroup
+  collectionGroup,
+  QueryConstraint
 } from 'firebase/firestore'
 
 import { singInWithIdToken, getUserDataFromCredential } from './auth'
@@ -44,10 +45,16 @@ type DbDoc = {
 
 type WhereArgs = [FieldPath | string, WhereFilterOp, any]
 
-const createWhere = (whereArgs: WhereArgs | undefined) =>
-  whereArgs ? where(...whereArgs) : undefined
+export const createWhere = (
+  whereArgs: WhereArgs | undefined
+): QueryConstraint | undefined => {
+  if (Array.isArray(whereArgs) && typeof whereArgs[0] === 'string') {
+    whereArgs[0] = new FieldPath(whereArgs[0])
+  }
+  return whereArgs ? where(...whereArgs) : undefined
+}
 
-const createQuery = (
+export const createQuery = (
   ref: CollectionReference | Query,
   whereArgs?: WhereArgs | undefined
 ): Query => {
