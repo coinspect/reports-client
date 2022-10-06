@@ -43,15 +43,23 @@ type DbDoc = {
   [key: string]: any
 }
 
-type WhereArgs = [FieldPath | string, WhereFilterOp, any]
+type WhereArgs = [FieldPath | string | string[], WhereFilterOp, any]
+
+export const parseWhereArgs = (
+  whereArgs: WhereArgs
+): [FieldPath, WhereFilterOp, any] => {
+  let [p, op, value] = whereArgs
+  p = Array.isArray(p) ? new FieldPath(...p) : new FieldPath(`${p}`)
+  return [p, op, value]
+}
 
 export const createWhere = (
   whereArgs: WhereArgs | undefined
 ): QueryConstraint | undefined => {
-  if (Array.isArray(whereArgs) && typeof whereArgs[0] === 'string') {
-    whereArgs[0] = new FieldPath(whereArgs[0])
+  if (!whereArgs) {
+    return
   }
-  return whereArgs ? where(...whereArgs) : undefined
+  return where(...parseWhereArgs(whereArgs))
 }
 
 export const createQuery = (

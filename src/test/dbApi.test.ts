@@ -6,10 +6,15 @@ import {
   groupApi,
   createSelect,
   createWhere,
-  createQuery
+  createQuery,
+  parseWhereArgs
 } from '../dbApi'
 import { COLLECTIONS } from '../constants'
-import { connectFirestoreEmulator, QueryConstraint } from 'firebase/firestore'
+import {
+  connectFirestoreEmulator,
+  FieldPath,
+  QueryConstraint
+} from 'firebase/firestore'
 import {
   dbPort,
   host,
@@ -27,15 +32,30 @@ afterEach(() => {
   jest.clearAllMocks()
 })
 
+describe('parseWhereArgs', () => {
+  it('should parse whereArgs', () => {
+    const t = ['field', 'user@user.com']
+    const [fp] = parseWhereArgs([t, '==', 'test'])
+    expect(fp).toBeInstanceOf(FieldPath)
+    expect(fp.isEqual(new FieldPath(t.join('.')))).toBe(false)
+    expect(fp.isEqual(new FieldPath(...t))).toBe(true)
+  })
+})
+
 describe('createWhere', () => {
   it('should return a QueryConstraint', () => {
     expect(createWhere(['xxx', '!=', 'test@user.com'])).toBeInstanceOf(
       QueryConstraint
     )
-    expect(createWhere(['test@user.com', '==', true])).toBeInstanceOf(
+    expect(createWhere(['foo.test@user.com', '==', true])).toBeInstanceOf(
+      QueryConstraint
+    )
+
+    expect(createWhere([['foo', 'test@user.com'], '==', true])).toBeInstanceOf(
       QueryConstraint
     )
   })
+
   it('should return undefined', () => {
     expect(createWhere(undefined)).toBeUndefined()
   })
