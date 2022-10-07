@@ -83,6 +83,7 @@ export type CollectionMethods = {
   get: (id: string) => Promise<DbDoc | undefined>
   create: (data: DbDoc) => Promise<string>
   update: (id: string, data: {}) => Promise<void>
+  updateWithPath: (id: string, path: string[], data: {}) => Promise<void>
   subscribe: (cb: (doc: {}) => void, whereArgs?: WhereArgs) => Unsubscribe
   subscribeDoc: (id: string, cb: (doc: {}) => void) => Promise<Unsubscribe>
   remove: (id: string) => Promise<void>
@@ -111,6 +112,14 @@ export const collectionApi = (col: CollectionReference) => {
     }
     const ref = doc(col, id)
     const res = await updateDoc(ref, data)
+  }
+
+  const updateWithPath = async (id: string, path: string[], value: {}) => {
+    if (!id) {
+      throw new Error('Missing id')
+    }
+    const ref = doc(col, id)
+    const res = await updateDoc(ref, new FieldPath(...path), value)
   }
 
   const get = async (id: string): Promise<any> => {
@@ -144,6 +153,7 @@ export const collectionApi = (col: CollectionReference) => {
     get,
     create,
     update,
+    updateWithPath,
     remove,
     subscribe,
     subscribeDoc
