@@ -19,9 +19,27 @@ afterEach(() => {
 
 describe('singInWithIdToken', () => {
   it('should signin using an idToken', async () => {
+    await auth.signOut()
     const result = await a.singInWithIdToken(app, idToken)
     expect(result).not.toBeUndefined()
     expect(typeof result).toBe('object')
+  })
+})
+
+describe('getUserData', () => {
+  it('should return an empty object', async () => {
+    await auth.signOut()
+    const data = await a.getUserData(auth.currentUser)
+    expect(typeof data).toBe('object')
+    expect(Object.keys(data).length).toBe(0)
+  })
+
+  it('should return the user data', async () => {
+    await auth.signOut
+    await a.singInWithIdToken(app, idToken)
+    const data = await a.getUserData(auth.currentUser)
+    expect(typeof data).toBe('object')
+    testUserData(idToken, data)
   })
 })
 

@@ -2,7 +2,8 @@ import {
   getAuth,
   signInWithCredential,
   GoogleAuthProvider,
-  UserCredential
+  UserCredential,
+  User
 } from 'firebase/auth'
 import { FirebaseApp } from 'firebase/app'
 
@@ -11,12 +12,17 @@ type TokenResponse = {
   refreshToken: string
 }
 
-export const getUserDataFromCredential = async (credential: UserCredential) => {
-  const { user } = credential
+export const getUserData = async (user: User | undefined | null) => {
+  if (!user) {
+    return {}
+  }
   const { email, displayName: name, refreshToken } = user
   const idToken = await user.getIdToken(true)
   return { email: `${email}`, name: `${name}`, idToken, refreshToken }
 }
+
+export const getUserDataFromCredential = async (credential: UserCredential) =>
+  getUserData(credential.user)
 
 export const singInWithIdToken = async (
   app: FirebaseApp,
