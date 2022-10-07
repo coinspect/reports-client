@@ -23,7 +23,7 @@ import {
   QueryConstraint
 } from 'firebase/firestore'
 
-import { singInWithIdToken, getUserDataFromCredential } from './auth'
+import { singInWithIdToken, getUserData } from './auth'
 import { getAuth } from 'firebase/auth'
 
 // See: https://firebase.google.com/docs/web/learn-more#config-object
@@ -198,7 +198,7 @@ export const createApi = (
   signOut: Function
   group: Function
   select: Function
-  onIdTokenChanged: Function
+  getUser: Function
 }> => {
   app = app || createApp(firebaseConfig as {})
   collections = collections || COLLECTIONS
@@ -206,7 +206,7 @@ export const createApi = (
   const signIn = async (idToken: string): Promise<UserData> => {
     try {
       const credential = await singInWithIdToken(app as FirebaseApp, idToken)
-      const data = await getUserDataFromCredential(credential)
+      const data = await getUserData(credential.user)
 
       if (!data.email) {
         throw new Error('Invalid email')
@@ -225,7 +225,10 @@ export const createApi = (
   const db = getDb(app)
   const cols = dbApi(db, collections)
 
-  const { signOut, onIdTokenChanged } = getAuth(app)
+  const auth = getAuth(app)
+  const signOut = () => getAuth(app).signOut
+  const getUser = (): Promise<UserData | {}> =>
+    getUserData(getAuth(app).currentUser)
   const group = groupApi(db)
   const select = (path: string | string[]) => createSelect(db, path)
 
@@ -235,7 +238,7 @@ export const createApi = (
     signOut,
     group,
     select,
-    onIdTokenChanged
+    getUser
   })
 }
 

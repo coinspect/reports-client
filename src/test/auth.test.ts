@@ -42,11 +42,3 @@ describe('getUserData', () => {
     testUserData(idToken, data)
   })
 })
-
-describe('getUserDataFromCredential', () => {
-  it('should get user data from credential', async () => {
-    const credential = await a.singInWithIdToken(app, idToken)
-    const result = await a.getUserDataFromCredential(credential)
-    testUserData(idToken, result)
-  })
-})

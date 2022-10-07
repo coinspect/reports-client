@@ -17,12 +17,9 @@ export const getUserData = async (user: User | undefined | null) => {
     return {}
   }
   const { email, displayName: name, refreshToken } = user
-  const idToken = await user.getIdToken(true)
+  const idToken = await user.getIdToken()
   return { email: `${email}`, name: `${name}`, idToken, refreshToken }
 }
-
-export const getUserDataFromCredential = async (credential: UserCredential) =>
-  getUserData(credential.user)
 
 export const singInWithIdToken = async (
   app: FirebaseApp,
