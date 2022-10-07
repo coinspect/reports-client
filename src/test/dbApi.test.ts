@@ -157,6 +157,21 @@ describe('api', () => {
         expect(data).not.toBe(undefined)
         expect(data?.name).toBe(newName)
       })
+
+      it('should update a doc field', async () => {
+        const list = await defaultCollection.list()
+        const data = list[1]
+        const user = 'user@user.com'
+        const user2 = 'test@test.com'
+        const perms = { [user]: true, [user2]: true }
+        await defaultCollection.update(data.id, { ...data, perms })
+        let newData = await defaultCollection.get(data.id)
+        expect(newData?.perms).toStrictEqual(perms)
+        await defaultCollection.update(data.id, false, ['perms', user])
+        newData = await defaultCollection.get(data.id)
+        expect(newData?.perms[user]).toBe(false)
+        expect(newData?.perms[user2]).toBe(true)
+      })
     })
 
     describe('remove', () => {

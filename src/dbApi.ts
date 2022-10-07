@@ -82,7 +82,7 @@ export type CollectionMethods = {
   list: (whereArgs?: WhereArgs | undefined) => Promise<any[]>
   get: (id: string) => Promise<DbDoc | undefined>
   create: (data: DbDoc) => Promise<string>
-  update: (id: string, data: {}) => Promise<void>
+  update: (id: string, data: {}, path?: string[] | string) => Promise<void>
   subscribe: (cb: (doc: {}) => void, whereArgs?: WhereArgs) => Unsubscribe
   subscribeDoc: (id: string, cb: (doc: {}) => void) => Promise<Unsubscribe>
   remove: (id: string) => Promise<void>
@@ -105,12 +105,13 @@ export const collectionApi = (col: CollectionReference) => {
     return ref.id
   }
 
-  const update = async (id: string, data: {}) => {
+  const update = async (id: string, data: {}, path?: string[] | string) => {
     if (!id) {
       throw new Error('Missing id')
     }
     const ref = doc(col, id)
-    const res = await updateDoc(ref, data)
+    const fp = Array.isArray(path) ? new FieldPath(...path) : path
+    return fp ? updateDoc(ref, fp, data) : updateDoc(ref, data)
   }
 
   const get = async (id: string): Promise<any> => {
