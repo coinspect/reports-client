@@ -13,9 +13,3 @@ export const firebaseConfig = { projectId, apiKey }
 export const app = createApp(firebaseConfig)
 export const idToken =
   '{"sub": "abc123", "email": "foo@example.com", "email_verified": true, "name":"test"}'
-
-export const wait = (timeMs: number) => {
-  return new Promise((resolve) => {
-    setTimeout(resolve, timeMs)
-  })
-}
