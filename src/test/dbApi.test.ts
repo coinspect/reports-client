@@ -7,8 +7,10 @@ import {
   createSelect,
   createWhere,
   createQuery,
-  parseWhereArgs
+  parseWhereArgs,
+  DbDoc
 } from '../dbApi'
+import { wait } from '../utils'
 import { COLLECTIONS } from '../constants'
 import {
   connectFirestoreEmulator,
@@ -21,12 +23,10 @@ import {
   app,
   idToken,
   firebaseConfig,
-  authPort,
-  wait
+  authPort
 } from './test-config'
 import { getAuth, connectAuthEmulator } from 'firebase/auth'
 import { testUserData } from './auth.test'
-import exp from 'constants'
 
 afterEach(() => {
   jest.clearAllMocks()
@@ -171,6 +171,49 @@ describe('api', () => {
         newData = await defaultCollection.get(data.id)
         expect(newData?.perms[user]).toBe(false)
         expect(newData?.perms[user2]).toBe(true)
+      })
+    })
+
+    describe('lockedUpdate', () => {
+      const data = { name: 'testName', test: 'test-data' }
+      const newName = 'newName'
+
+      const updateCb = async (oldData: DbDoc) => {
+        expect(oldData).toStrictEqual(data)
+        oldData.name = newName
+        return oldData
+      }
+
+      it('should update a doc', async () => {
+        const id = await defaultCollection.create(data)
+        await defaultCollection.lockedUpdate(id, updateCb)
+        const updatedData = await defaultCollection.get(id)
+        expect(updatedData).not.toBe(undefined)
+        expect(updatedData?.name).toBe(newName)
+        expect(updatedData?.test).toBe(data.test)
+      })
+
+      it('should lock others updates', async () => {
+        const id = await defaultCollection.create(data)
+        const xData = { name: 'otherName', test: 'xxx' }
+        const promises = [
+          () =>
+            defaultCollection.lockedUpdate(id, async (data: DbDoc) => {
+              await wait(2000)
+              data.name = newName
+              return data
+            }),
+          () => defaultCollection.update(id, xData),
+          () => defaultCollection.update(id, xData)
+        ]
+        const ends: string[] = []
+        const result = await Promise.all(
+          promises.map((p, i) => p().then(() => ends.push(`${i}`)))
+        )
+        expect(ends[ends.length - 1]).toBe('0')
+        const updatedData = await defaultCollection.get(id)
+        expect(updatedData).not.toBe(undefined)
+        expect(updatedData?.name).toBe(newName)
       })
     })
 

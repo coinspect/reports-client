@@ -20,7 +20,8 @@ import {
   FieldPath,
   Query,
   collectionGroup,
-  QueryConstraint
+  QueryConstraint,
+  runTransaction
 } from 'firebase/firestore'
 
 import { singInWithIdToken, getUserData } from './auth'
@@ -39,7 +40,7 @@ const getSnapData = (snap: DocumentSnapshot): {} | undefined => {
   }
   return { id: snap.id, ...snap.data() }
 }
-type DbDoc = {
+export type DbDoc = {
   [key: string]: any
 }
 
@@ -78,6 +79,8 @@ type CollectionList = {
   [key: string]: string
 }
 
+type LockedUpdateCallBack = (data: DbDoc) => Promise<DbDoc>
+
 export type CollectionMethods = {
   list: (whereArgs?: WhereArgs | undefined) => Promise<any[]>
   get: (id: string) => Promise<DbDoc | undefined>
@@ -86,6 +89,7 @@ export type CollectionMethods = {
   subscribe: (cb: (doc: {}) => void, whereArgs?: WhereArgs) => Unsubscribe
   subscribeDoc: (id: string, cb: (doc: {}) => void) => Promise<Unsubscribe>
   remove: (id: string) => Promise<void>
+  lockedUpdate: (id: string, cb: LockedUpdateCallBack) => Promise<void>
 }
 
 const listDocuments = async (q: Query): Promise<any[]> => {
@@ -93,7 +97,7 @@ const listDocuments = async (q: Query): Promise<any[]> => {
   return snp.docs.map((doc) => getSnapData(doc))
 }
 
-export const collectionApi = (col: CollectionReference) => {
+export const collectionApi = (db: Firestore, col: CollectionReference) => {
   const getDocRef = (id: string) => doc(col, id)
   const getSnapshot = (id: string) => getDoc(getDocRef(id))
 
@@ -140,6 +144,23 @@ export const collectionApi = (col: CollectionReference) => {
     await deleteDoc(docr)
   }
 
+  const lockedUpdate = async (id: string, cb: LockedUpdateCallBack) => {
+    try {
+      const docr = await getDocRef(id)
+      await runTransaction(db, async (transaction) => {
+        const sfDoc = await transaction.get(docr)
+        if (!sfDoc.exists()) {
+          throw new Error('Document does not exist!')
+        }
+        const data = sfDoc.data()
+        const newData = await cb(data)
+        transaction.update(docr, newData)
+      })
+    } catch (err) {
+      return Promise.reject(err)
+    }
+  }
+
   return Object.freeze({
     list,
     get,
@@ -147,7 +168,8 @@ export const collectionApi = (col: CollectionReference) => {
     update,
     remove,
     subscribe,
-    subscribeDoc
+    subscribeDoc,
+    lockedUpdate
   })
 }
 
@@ -155,7 +177,7 @@ export const dbApi = (db: Firestore, cols: CollectionList) => {
   const collections = Object.entries(cols).reduce(
     (v: { [k: string]: CollectionMethods }, a) => {
       const [key, name] = a
-      v[key] = collectionApi(collection(db, name))
+      v[key] = collectionApi(db, collection(db, name))
       return v
     },
     {}
@@ -185,7 +207,7 @@ export const groupApi = (db: Firestore) => {
 
 export const createSelect = (db: Firestore, path: string[] | string) => {
   path = Array.isArray(path) ? path.join('/') : path
-  return collectionApi(collection(db, path))
+  return collectionApi(db, collection(db, path))
 }
 
 export const createApi = (
