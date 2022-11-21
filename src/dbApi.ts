@@ -24,6 +24,8 @@ import {
   runTransaction
 } from 'firebase/firestore'
 
+import { deleteObject, FirebaseStorage, getDownloadURL, getStorage, listAll, ref, uploadBytes } from 'firebase/storage'
+
 import { singInWithIdToken, getUserData } from './auth'
 import { getAuth } from 'firebase/auth'
 
@@ -173,6 +175,31 @@ export const collectionApi = (db: Firestore, col: CollectionReference) => {
   })
 }
 
+export const storageApi = (storage: FirebaseStorage) => {
+  const download = async (path: string) => {
+      const fileRef = ref(storage, path)
+      return getDownloadURL(fileRef)
+    }
+  const upload = async (path: string, bytes: Uint8Array) => {
+    const fileRef = ref(storage, path)
+    return uploadBytes(fileRef, bytes)
+  }
+  const list = async (path: string) => {
+    const fileRef = ref(storage, path)
+    return listAll(fileRef)
+  }
+  const remove = async (path: string) => {
+    const fileRef = ref(storage, path)
+    return deleteObject(fileRef)
+  }
+  return Object.freeze({
+    download,
+    upload,
+    list,
+    remove
+  })
+}
+
 export const dbApi = (db: Firestore, cols: CollectionList) => {
   const collections = Object.entries(cols).reduce(
     (v: { [k: string]: CollectionMethods }, a) => {
@@ -245,7 +272,9 @@ export const createApi = (
   }
 
   const db = getDb(app)
+  const storage = getStorage(app)
   const cols = dbApi(db, collections)
+  const storageMethods = storageApi(storage)
 
   const auth = getAuth(app)
   const signOut = () => getAuth(app).signOut
@@ -256,6 +285,7 @@ export const createApi = (
 
   return Object.freeze({
     cols,
+    storage: storageMethods,
     signIn,
     signOut,
     group,
