@@ -33,14 +33,14 @@ describe('api', () => {
 
     it('folder should be in root', async () => {
       const list = await stApi.list('')
-      expect(list.prefixes.length).toEqual(1)
-      expect(list.prefixes[0].name).toEqual('test-folder')
+      expect(list.folders.length).toEqual(1)
+      expect(list.folders[0].name).toEqual('test-folder')
     })
 
     it('should be listed inside the folder', async () => {
       const list = await stApi.list('test-folder')
-      expect(list.items.length).toEqual(1)
-      expect(list.items).toContainEqual(result.ref)
+      expect(list.files.length).toEqual(1)
+      expect(list.files[0].name).toEqual('test.ext')
     })
 
     it('should have the same content', async () => {
@@ -65,9 +65,9 @@ describe('api', () => {
 
     it('all files should be listed', async () => {
       const list = await stApi.list('test-folder')
-      expect(list.items.length).toEqual(2)
-      expect(list.items).toContainEqual(result.ref)
-      expect(list.items).toContainEqual(result2.ref)
+      expect(list.files.length).toEqual(2)
+      expect(list.files.map((f) => f.name)).toContainEqual('test.ext')
+      expect(list.files.map((f) => f.name)).toContainEqual('test2.ext')
     })
 
     it('all files should have the correct content', async () => {
@@ -92,20 +92,22 @@ describe('api', () => {
       result = await stApi.upload('test-folder/test.ext', file)
       result2 = await stApi.upload('test-folder/test2.ext', file2)
       const list = await stApi.list('test-folder')
-      expect(list.items).toContainEqual(result.ref)
+
+      expect(list.files.length).toEqual(2)
 
       await stApi.remove('test-folder/test.ext')
     })
 
     it('should not be listed inside the folder', async () => {
       const list = await stApi.list('test-folder')
-      expect(list.items).not.toContainEqual(result.ref)
+      expect(list.files.length).toEqual(1)
+      expect(list.files[0].name).not.toEqual('test.ext')
     })
 
     it('other file should still be in the folder', async () => {
       const list = await stApi.list('test-folder')
-      expect(list.items.length).toEqual(1)
-      expect(list.items).toContainEqual(result2.ref)
+      expect(list.files.length).toEqual(1)
+      expect(list.files[0].name).toEqual('test2.ext')
     })
 
     afterAll(async () => {
@@ -119,14 +121,14 @@ describe('api', () => {
     beforeAll(async () => {
       result = await stApi.upload('test-folder/test.ext', file)
       const list = await stApi.list('test-folder')
-      expect(list.items).toContainEqual(result.ref)
+      expect(list.files[0].name).toEqual('test.ext')
 
       await stApi.remove('test-folder/test.ext')
     })
 
     it('should not be listed inside the folder', async () => {
       const list = await stApi.list('test-folder')
-      expect(list.items).not.toContainEqual(result.ref)
+      expect(list.files.length).toEqual(0)
     })
 
     it("listing the folder doesn't fail", async () => {
@@ -135,7 +137,7 @@ describe('api', () => {
 
     it('prefix should be removed', async () => {
       const list = await stApi.list('')
-      expect(list.prefixes.length).toEqual(0)
+      expect(list.folders.length).toEqual(0)
     })
   })
 
@@ -144,7 +146,7 @@ describe('api', () => {
     beforeAll(async () => {
       const result = await stApi.upload('test-folder/test.ext', file)
       const list = await stApi.list('test-folder')
-      expect(list.items).toContainEqual(result.ref)
+      expect(list.files[0].name).toEqual('test.ext')
     })
 
     it("folders can't be removed", async () => {
@@ -159,8 +161,8 @@ describe('api', () => {
       const result = await stApi.upload('test-folder/test.ext', file)
       const result2 = await stApi.upload('test-folder/test2.ext', file2)
       const list = await stApi.list('test-folder')
-      expect(list.items).toContainEqual(result.ref)
-      expect(list.items).toContainEqual(result2.ref)
+      expect(list.files.map((f) => f.name)).toContainEqual('test.ext')
+      expect(list.files.map((f) => f.name)).toContainEqual('test2.ext')
 
       await stApi.removeFolder('test-folder')
     })
@@ -171,7 +173,7 @@ describe('api', () => {
 
     it('prefix should be removed', async () => {
       const list = await stApi.list('')
-      expect(list.prefixes.length).toEqual(0)
+      expect(list.folders.length).toEqual(0)
     })
 
     it('listing any file should fail', async () => {

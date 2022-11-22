@@ -37,6 +37,7 @@ import {
 
 import { singInWithIdToken, getUserData } from './auth'
 import { getAuth } from 'firebase/auth'
+import { toStorageItems } from './storageNodes'
 
 // See: https://firebase.google.com/docs/web/learn-more#config-object
 
@@ -195,7 +196,8 @@ export const storageApi = (storage: FirebaseStorage) => {
   }
   const list = async (path: string) => {
     const fileRef = ref(storage, path)
-    return listAll(fileRef)
+    const result = await listAll(fileRef)
+    return toStorageItems(result)
   }
   const remove = async (path: string) => {
     const fileRef = ref(storage, path)
