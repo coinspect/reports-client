@@ -24,7 +24,16 @@ import {
   runTransaction
 } from 'firebase/firestore'
 
-import { deleteObject, FirebaseStorage, getDownloadURL, getStorage, listAll, ref, uploadBytes } from 'firebase/storage'
+import {
+  deleteObject,
+  FirebaseStorage,
+  getDownloadURL,
+  getStorage,
+  listAll,
+  ref,
+  StorageReference,
+  uploadBytes
+} from 'firebase/storage'
 
 import { singInWithIdToken, getUserData } from './auth'
 import { getAuth } from 'firebase/auth'
@@ -176,10 +185,11 @@ export const collectionApi = (db: Firestore, col: CollectionReference) => {
 }
 
 export const storageApi = (storage: FirebaseStorage) => {
+
   const download = async (path: string) => {
-      const fileRef = ref(storage, path)
-      return getDownloadURL(fileRef)
-    }
+    const fileRef = ref(storage, path)
+    return getDownloadURL(fileRef)
+  }
   const upload = async (path: string, bytes: Uint8Array) => {
     const fileRef = ref(storage, path)
     return uploadBytes(fileRef, bytes)
@@ -192,11 +202,25 @@ export const storageApi = (storage: FirebaseStorage) => {
     const fileRef = ref(storage, path)
     return deleteObject(fileRef)
   }
+
+  const removeFolder = async (path: string): Promise<void[]> => {
+    let folders: StorageReference[] = [ref(storage, path)]
+    let promises: Promise<void>[] = []
+    while(folders.length > 0) {
+      const folder = folders.pop()
+      const { items, prefixes } = await listAll(folder!)
+      folders = folders.concat(prefixes)
+      promises = promises.concat(items.map((item) => deleteObject(item)))
+    }
+    return Promise.all(promises)
+  }
+
   return Object.freeze({
     download,
     upload,
     list,
-    remove
+    remove,
+    removeFolder
   })
 }
 
