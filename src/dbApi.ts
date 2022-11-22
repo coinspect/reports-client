@@ -296,9 +296,8 @@ export const createApi = (
   }
 
   const db = getDb(app)
-  const storage = getStorage(app)
   const cols = dbApi(db, collections)
-  const storageMethods = storageApi(storage)
+  const storage = storageApi(getStorage(app))
 
   const auth = getAuth(app)
   const signOut = () => getAuth(app).signOut
@@ -309,7 +308,7 @@ export const createApi = (
 
   return Object.freeze({
     cols,
-    storage: storageMethods,
+    storage,
     signIn,
     signOut,
     group,
