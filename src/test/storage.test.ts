@@ -1,13 +1,10 @@
+import { storageApi } from '../dbApi'
+import { dbPort, host, app, storagePort } from './test-config'
 import {
-  storageApi
-} from '../dbApi'
-import {
-  dbPort,
-  host,
-  app,
-  storagePort
-} from './test-config'
-import { connectStorageEmulator, getStorage, UploadResult } from 'firebase/storage'
+  connectStorageEmulator,
+  getStorage,
+  UploadResult
+} from 'firebase/storage'
 import fetch from 'node-fetch'
 
 afterEach(() => {
@@ -19,13 +16,13 @@ describe('api', () => {
   connectStorageEmulator(storage, host, storagePort)
   const stApi = storageApi(storage)
 
-  describe('uploading a file in a folder',  () => {
+  describe('uploading a file in a folder', () => {
     const file = new Uint8Array([1, 2, 3])
     let result: UploadResult
     beforeAll(async () => {
       result = await stApi.upload('test-folder/test.ext', file)
     })
-    
+
     it('should return the same name', () => {
       expect(result.ref.name).toEqual('test.ext')
     })
@@ -105,7 +102,7 @@ describe('api', () => {
       expect(list.items).not.toContainEqual(result.ref)
     })
 
-    it('other file should still be in the folder' , async () => {
+    it('other file should still be in the folder', async () => {
       const list = await stApi.list('test-folder')
       expect(list.items.length).toEqual(1)
       expect(list.items).toContainEqual(result2.ref)
@@ -114,7 +111,6 @@ describe('api', () => {
     afterAll(async () => {
       await stApi.removeFolder('test-folder')
     })
-
   })
 
   describe('removing last file of folder', () => {
@@ -133,7 +129,7 @@ describe('api', () => {
       expect(list.items).not.toContainEqual(result.ref)
     })
 
-    it('listing the folder doesn\'t fail' , async () => {
+    it("listing the folder doesn't fail", async () => {
       await stApi.list('test-folder')
     })
 
@@ -141,7 +137,6 @@ describe('api', () => {
       const list = await stApi.list('')
       expect(list.prefixes.length).toEqual(0)
     })
-
   })
 
   describe('removing a folder as file', () => {
@@ -152,10 +147,9 @@ describe('api', () => {
       expect(list.items).toContainEqual(result.ref)
     })
 
-    it('folders can\'t be removed', async () => {
+    it("folders can't be removed", async () => {
       await expect(() => stApi.remove('test-folder')).rejects.toThrow()
     })
-
   })
 
   describe('removing folder', () => {
@@ -171,7 +165,7 @@ describe('api', () => {
       await stApi.removeFolder('test-folder')
     })
 
-    it('list doesn\'t fail', async () => {
+    it("list doesn't fail", async () => {
       await stApi.list('test-folder')
     })
 
@@ -181,9 +175,10 @@ describe('api', () => {
     })
 
     it('listing any file should fail', async () => {
-      await expect(() => stApi.download('test-folder/test.ext')).rejects.toThrow()
+      await expect(() =>
+        stApi.download('test-folder/test.ext')
+      ).rejects.toThrow()
     })
-
   })
 })
 

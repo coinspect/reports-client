@@ -185,7 +185,6 @@ export const collectionApi = (db: Firestore, col: CollectionReference) => {
 }
 
 export const storageApi = (storage: FirebaseStorage) => {
-
   const download = async (path: string) => {
     const fileRef = ref(storage, path)
     return getDownloadURL(fileRef)
@@ -206,7 +205,7 @@ export const storageApi = (storage: FirebaseStorage) => {
   const removeFolder = async (path: string): Promise<void[]> => {
     let folders: StorageReference[] = [ref(storage, path)]
     let promises: Promise<void>[] = []
-    while(folders.length > 0) {
+    while (folders.length > 0) {
       const folder = folders.pop()
       const { items, prefixes } = await listAll(folder!)
       folders = folders.concat(prefixes)
