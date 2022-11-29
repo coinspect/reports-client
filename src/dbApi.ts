@@ -30,9 +30,11 @@ import {
   getDownloadURL,
   getStorage,
   listAll,
+  ListResult,
   ref,
   StorageReference,
-  uploadBytes
+  uploadBytes,
+  UploadResult
 } from 'firebase/storage'
 
 import { singInWithIdToken, getUserData } from './auth'
@@ -184,7 +186,15 @@ export const collectionApi = (db: Firestore, col: CollectionReference) => {
   })
 }
 
-export const storageApi = (storage: FirebaseStorage) => {
+interface StorageApi {
+  download: (path: string) => Promise<string>
+  upload: (path: string, bytes: Uint8Array) => Promise<UploadResult>
+  list: (path: string) => Promise<ListResult>
+  remove: (path: string) => void
+  removeFolder: (path: string) => Promise<void[]>
+}
+
+export const storageApi = (storage: FirebaseStorage): StorageApi => {
   const download = async (path: string) => {
     const fileRef = ref(storage, path)
     return getDownloadURL(fileRef)
@@ -271,6 +281,7 @@ export const createApi = (
   group: Function
   select: Function
   getUser: Function
+  storage: StorageApi
 }> => {
   app = app || createApp(firebaseConfig as {})
   collections = collections || COLLECTIONS
