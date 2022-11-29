@@ -39,7 +39,7 @@ import {
 
 import { singInWithIdToken, getUserData } from './auth'
 import { getAuth } from 'firebase/auth'
-import { toStorageItems } from './storageNodes'
+import { toStorageItems, ResultList } from './storageNodes'
 
 // See: https://firebase.google.com/docs/web/learn-more#config-object
 
@@ -190,8 +190,8 @@ export const collectionApi = (db: Firestore, col: CollectionReference) => {
 interface StorageApi {
   download: (path: string) => Promise<string>
   upload: (path: string, bytes: Uint8Array) => Promise<UploadResult>
-  list: (path: string) => Promise<ListResult>
-  remove: (path: string) => void
+  list: (path: string) => Promise<ResultList>
+  remove: (path: string) => Promise<void>
   removeFolder: (path: string) => Promise<void[]>
 }
 
