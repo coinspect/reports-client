@@ -38,8 +38,9 @@ import {
 } from 'firebase/storage'
 
 import { singInWithIdToken, getUserData } from './auth'
-import { getAuth } from 'firebase/auth'
+import { getAuth, initializeAuth } from 'firebase/auth'
 import { toStorageItems, ResultList } from './storageNodes'
+import { createPersistence, CredentialsStorer } from './persistence'
 
 // See: https://firebase.google.com/docs/web/learn-more#config-object
 
@@ -284,6 +285,7 @@ export const createApi = (
   select: Function
   getUser: Function
   storage: StorageApi
+  setStorer: (storer: CredentialsStorer) => void
 }> => {
   app = app || createApp(firebaseConfig as {})
   collections = collections || COLLECTIONS
@@ -307,11 +309,19 @@ export const createApi = (
     }
   }
 
+  let storer: CredentialsStorer | undefined = undefined
+
+  const persistence = createPersistence(() => storer) as any
+
+  const setStorer = (newStorer: CredentialsStorer) => {
+    storer = newStorer
+  }
+
   const db = getDb(app)
   const cols = dbApi(db, collections)
   const storage = storageApi(getStorage(app))
 
-  const auth = getAuth(app)
+  const auth = initializeAuth(app, { persistence: [persistence] })
   const signOut = () => getAuth(app).signOut
   const getUser = (): Promise<UserData | {}> =>
     getUserData(getAuth(app).currentUser)
@@ -325,7 +335,8 @@ export const createApi = (
     signOut,
     group,
     select,
-    getUser
+    getUser,
+    setStorer
   })
 }
 
