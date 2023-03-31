@@ -38,7 +38,12 @@ import {
 } from 'firebase/storage'
 
 import { singInWithIdToken, getUserData } from './auth'
-import { getAuth, initializeAuth, User, onAuthStateChanged } from 'firebase/auth'
+import {
+  getAuth,
+  initializeAuth,
+  User,
+  onAuthStateChanged
+} from 'firebase/auth'
 import { toStorageItems, ResultList } from './storageNodes'
 import { createPersistence, CredentialsStorer } from './persistence'
 
@@ -323,7 +328,7 @@ export const createApi = (
   const cols = dbApi(db, collections)
   const storage = storageApi(getStorage(app))
 
-  const signOut = () => getAuth(app).signOut()
+  const signOut = async () => await getAuth(app).signOut()
   const getUser = (): Promise<UserData | {}> =>
     getUserData(getAuth(app).currentUser)
   const group = groupApi(db)
