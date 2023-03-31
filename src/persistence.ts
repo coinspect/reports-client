@@ -4,9 +4,7 @@ export interface CredentialsStorer {
   remove: (key: string) => Promise<void>
 }
 
-export const createPersistence = (
-  getStore: () => CredentialsStorer | undefined
-) => {
+export const createPersistence = (store: CredentialsStorer) => {
   return class {
     static type: 'NONE' = 'NONE'
     readonly type = 'NONE' as any
@@ -16,15 +14,15 @@ export const createPersistence = (
     }
 
     async _set<T>(key: string, value: T): Promise<void> {
-      await getStore()?.set(key, value)
+      await store.set(key, value)
     }
 
     async _get<T>(key: string): Promise<T | null | undefined> {
-      return await getStore()?.get(key)
+      return await store.get(key)
     }
 
     async _remove(key: string): Promise<void> {
-      await getStore()?.remove(key)
+      await store.remove(key)
     }
 
     _addListener(_key: string, _listener: any): void {

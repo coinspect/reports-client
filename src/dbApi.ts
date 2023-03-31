@@ -297,7 +297,7 @@ export const createApi = (
   collections = collections || COLLECTIONS
 
   const initializeAuthentication = (storer: CredentialsStorer) => {
-    initializeAuth(app!, { persistence: [createPersistence(() => storer)] })
+    initializeAuth(app!, { persistence: [createPersistence(storer)] })
   }
 
   const setAuthListener = (listener: (user: any) => void) => {
