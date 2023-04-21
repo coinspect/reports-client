@@ -37,12 +37,13 @@ import {
   UploadResult
 } from 'firebase/storage'
 
-import { singInWithIdToken, getUserData } from './auth'
+import { singInWithIdToken, getUserData, signInWithEmail } from './auth'
 import {
   getAuth,
   initializeAuth,
   User,
-  onAuthStateChanged
+  onAuthStateChanged,
+  UserCredential
 } from 'firebase/auth'
 import { toStorageItems, ResultList } from './storageNodes'
 import { createPersistence, CredentialsStorer } from './persistence'
@@ -285,6 +286,10 @@ export const createApi = (
 ): Readonly<{
   cols: Readonly<{ [key: string]: CollectionMethods }>
   signIn: (idToken: string) => Promise<UserData>
+  signInWithEmailAndPassword: (
+    email: string,
+    password: string
+  ) => Promise<UserData>
   signOut: Function
   group: Function
   select: Function
@@ -305,20 +310,39 @@ export const createApi = (
     onAuthStateChanged(auth, listener)
   }
 
+  const getData = async (credential: UserCredential): Promise<UserData> => {
+    const data = await getUserData(credential.user)
+    if (!data.email) {
+      throw new Error('Invalid email')
+    }
+
+    if (!data.name) {
+      throw new Error('Invalid name')
+    }
+
+    return data
+  }
+
   const signIn = async (idToken: string): Promise<UserData> => {
     try {
       const credential = await singInWithIdToken(app as FirebaseApp, idToken)
-      const data = await getUserData(credential.user)
+      return getData(credential)
+    } catch (err) {
+      return Promise.reject(err)
+    }
+  }
 
-      if (!data.email) {
-        throw new Error('Invalid email')
-      }
-
-      if (!data.name) {
-        throw new Error('Invalid name')
-      }
-
-      return data
+  const signInWithEmailAndPassword = async (
+    email: string,
+    password: string
+  ) => {
+    try {
+      const credential = await signInWithEmail(
+        app as FirebaseApp,
+        email,
+        password
+      )
+      return getData(credential)
     } catch (err) {
       return Promise.reject(err)
     }
@@ -338,6 +362,7 @@ export const createApi = (
     cols,
     storage,
     signIn,
+    signInWithEmailAndPassword,
     signOut,
     group,
     select,
