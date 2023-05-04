@@ -21,7 +21,8 @@ import {
   Query,
   collectionGroup,
   QueryConstraint,
-  runTransaction
+  runTransaction,
+  serverTimestamp
 } from 'firebase/firestore'
 
 import {
@@ -175,6 +176,7 @@ export const collectionApi = (db: Firestore, col: CollectionReference) => {
         }
         const data = sfDoc.data()
         const newData = await cb(data)
+        newData.updatedAt = serverTimestamp()
         transaction.update(docr, newData)
       })
     } catch (err) {
