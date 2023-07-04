@@ -22,7 +22,9 @@ import {
   collectionGroup,
   QueryConstraint,
   runTransaction,
-  serverTimestamp
+  serverTimestamp,
+  arrayUnion,
+  arrayRemove
 } from 'firebase/firestore'
 
 import {
@@ -108,6 +110,8 @@ export type CollectionMethods = {
   get: (id: string) => Promise<DbDoc | undefined>
   create: (data: DbDoc) => Promise<string>
   update: (id: string, data: {}, path?: string[] | string) => Promise<void>
+  addToArray: (id: string, value: string | number, path: string[] | string) => Promise<void>
+  removeFromArray: (id: string, value: string | number, path: string[] | string) => Promise<void>
   subscribe: (cb: (doc: {}) => void, whereArgs?: WhereArgs) => Unsubscribe
   subscribeDoc: (id: string, cb: (doc: {}) => void) => Promise<Unsubscribe>
   remove: (id: string) => Promise<void>
@@ -119,7 +123,7 @@ const listDocuments = async (q: Query): Promise<any[]> => {
   return snp.docs.map((doc) => getSnapData(doc))
 }
 
-export const collectionApi = (db: Firestore, col: CollectionReference) => {
+export const collectionApi = (db: Firestore, col: CollectionReference): CollectionMethods => {
   const getDocRef = (id: string) => doc(col, id)
   const getSnapshot = (id: string) => getDoc(getDocRef(id))
 
@@ -138,6 +142,24 @@ export const collectionApi = (db: Firestore, col: CollectionReference) => {
     const ref = doc(col, id)
     const fp = Array.isArray(path) ? new FieldPath(...path) : path
     return fp ? updateDoc(ref, fp, data) : updateDoc(ref, data)
+  }
+
+  const addToArray = async(id: string, value: string | number, path: string[] | string) => {
+    if (!id) {
+      throw new Error('Missing id')
+    }
+    const ref = doc(col, id)
+    const fp = Array.isArray(path) ? new FieldPath(...path) : path
+    return updateDoc(ref, fp, arrayUnion(value))
+  }
+
+  const removeFromArray = async(id: string, value: string | number, path: string[] | string) => {
+    if (!id) {
+      throw new Error('Missing id')
+    }
+    const ref = doc(col, id)
+    const fp = Array.isArray(path) ? new FieldPath(...path) : path
+    return updateDoc(ref, fp, arrayRemove(value))
   }
 
   const get = async (id: string): Promise<any> => {
@@ -189,6 +211,8 @@ export const collectionApi = (db: Firestore, col: CollectionReference) => {
     get,
     create,
     update,
+    addToArray,
+    removeFromArray,
     remove,
     subscribe,
     subscribeDoc,
@@ -276,7 +300,7 @@ export const groupApi = (db: Firestore) => {
   return group
 }
 
-export const createSelect = (db: Firestore, path: string[] | string) => {
+export const createSelect = (db: Firestore, path: string[] | string): CollectionMethods => {
   path = Array.isArray(path) ? path.join('/') : path
   return collectionApi(db, collection(db, path))
 }
@@ -294,7 +318,7 @@ export const createApi = (
   ) => Promise<UserData>
   signOut: Function
   group: Function
-  select: Function
+  select: (path: string | string[]) => CollectionMethods
   getUser: Function
   storage: StorageApi
   initializeAuthentication: (storer: CredentialsStorer) => void
@@ -358,7 +382,7 @@ export const createApi = (
   const getUser = (): Promise<UserData | {}> =>
     getUserData(getAuth(app).currentUser)
   const group = groupApi(db)
-  const select = (path: string | string[]) => createSelect(db, path)
+  const select = (path: string | string[]): CollectionMethods => createSelect(db, path)
 
   return Object.freeze({
     cols,
