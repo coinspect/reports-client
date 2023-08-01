@@ -37,6 +37,7 @@ import {
   ref,
   StorageReference,
   uploadBytes,
+  UploadMetadata,
   UploadResult
 } from 'firebase/storage'
 
@@ -222,7 +223,7 @@ export const collectionApi = (db: Firestore, col: CollectionReference): Collecti
 
 interface StorageApi {
   download: (path: string) => Promise<string>
-  upload: (path: string, bytes: Uint8Array) => Promise<UploadResult>
+  upload: (path: string, bytes: Uint8Array, metadata?: UploadMetadata) => Promise<UploadResult>
   list: (path: string) => Promise<ResultList>
   remove: (path: string) => Promise<void>
   removeFolder: (path: string) => Promise<void[]>
@@ -233,9 +234,9 @@ export const storageApi = (storage: FirebaseStorage): StorageApi => {
     const fileRef = ref(storage, path)
     return getDownloadURL(fileRef)
   }
-  const upload = async (path: string, bytes: Uint8Array) => {
+  const upload = async (path: string, bytes: Uint8Array, metadata?: UploadMetadata) => {
     const fileRef = ref(storage, path)
-    return uploadBytes(fileRef, bytes)
+    return uploadBytes(fileRef, bytes, metadata)
   }
   const list = async (path: string) => {
     const fileRef = ref(storage, path)
