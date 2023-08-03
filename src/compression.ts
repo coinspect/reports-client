@@ -1,10 +1,7 @@
 import * as zlib from 'zlib'
 
-export const decompressArrayBuffer = (arrayBuffer: ArrayBuffer): Promise<ArrayBuffer> => {
+export const decompressArrayBuffer = (buffer: ArrayBuffer): Promise<ArrayBuffer> => {
   return new Promise((resolve, reject) => {
-    // Convert ArrayBuffer to Buffer
-    const buffer = Buffer.from(arrayBuffer)
-
     // Decompress the Buffer using 'zlib'
     zlib.gunzip(buffer, (err, decompressedBuffer) => {
       if (err) {
@@ -17,11 +14,8 @@ export const decompressArrayBuffer = (arrayBuffer: ArrayBuffer): Promise<ArrayBu
   })
 }
 
-export const compressArrayBuffer = (arrayBuffer: ArrayBuffer): Promise<Uint8Array> => {
+export const compressArrayBuffer = (buffer: ArrayBuffer): Promise<Uint8Array> => {
   return new Promise((resolve, reject) => {
-    // Convert ArrayBuffer to Buffer
-    const buffer = Buffer.from(arrayBuffer)
-
     // Compress the Buffer using 'zlib'
     zlib.gzip(buffer, (err, compressedBuffer) => {
       if (err) {
