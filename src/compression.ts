@@ -1,29 +1,23 @@
-import * as zlib from 'zlib'
+import * as pako from 'pako'
 
-export const decompressArrayBuffer = (buffer: ArrayBuffer): Promise<ArrayBuffer> => {
-  return new Promise((resolve, reject) => {
-    // Decompress the Buffer using 'zlib'
-    zlib.gunzip(buffer, (err, decompressedBuffer) => {
-      if (err) {
-        reject(err)
-      } else {
-        // Convert the decompressed Buffer back to ArrayBuffer and return it
-        resolve(Uint8Array.from(decompressedBuffer).buffer)
-      }
-    })
-  })
+export const decompressArrayBuffer = (arrayBuffer: ArrayBuffer): ArrayBuffer => {
+  // Convert ArrayBuffer to Uint8Array
+  const uint8Array = new Uint8Array(arrayBuffer)
+
+  // Decompress the Uint8Array using 'pako'
+  const decompressedData = pako.inflate(uint8Array)
+
+  // Convert the decompressed Uint8Array back to ArrayBuffer and return it
+  return decompressedData.buffer
 }
 
-export const compressArrayBuffer = (buffer: ArrayBuffer): Promise<Uint8Array> => {
-  return new Promise((resolve, reject) => {
-    // Compress the Buffer using 'zlib'
-    zlib.gzip(buffer, (err, compressedBuffer) => {
-      if (err) {
-        reject(err)
-      } else {
-        // Convert the compressed Buffer back to ArrayBuffer and return it
-        resolve(Uint8Array.from(compressedBuffer))
-      }
-    })
-  })
+export const compressArrayBuffer = (arrayBuffer: ArrayBuffer): Uint8Array => {
+  // Convert ArrayBuffer to Uint8Array
+  const uint8Array = new Uint8Array(arrayBuffer)
+
+  // Compress the Uint8Array using 'pako'
+  const compressedData = pako.deflate(uint8Array)
+
+  // Return the compressed Uint8Array
+  return compressedData
 }
