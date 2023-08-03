@@ -5,7 +5,7 @@ export const decompressArrayBuffer = (arrayBuffer: ArrayBuffer): ArrayBuffer => 
   const uint8Array = new Uint8Array(arrayBuffer)
 
   // Decompress the Uint8Array using 'pako'
-  const decompressedData = pako.inflate(uint8Array)
+  const decompressedData = pako.ungzip(uint8Array)
 
   // Convert the decompressed Uint8Array back to ArrayBuffer and return it
   return decompressedData.buffer
@@ -16,7 +16,7 @@ export const compressArrayBuffer = (arrayBuffer: ArrayBuffer): Uint8Array => {
   const uint8Array = new Uint8Array(arrayBuffer)
 
   // Compress the Uint8Array using 'pako'
-  const compressedData = pako.deflate(uint8Array)
+  const compressedData = pako.gzip(uint8Array)
 
   // Return the compressed Uint8Array
   return compressedData
