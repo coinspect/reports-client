@@ -18,7 +18,12 @@ export const getUserData = async (user: User | undefined | null) => {
     return {}
   }
   const { email, displayName: name, refreshToken } = user
-  const idToken = await user.getIdToken()
+  let idToken = undefined
+  try {
+    idToken = await user.getIdToken()
+  } catch(error) {
+    console.log('Failed getting id token', error)
+  }
   return { email: `${email}`, name: `${name}`, idToken, refreshToken }
 }
 

@@ -288,7 +288,7 @@ export const userDataSchema = {
   refreshToken: ''
 }
 
-export type UserData = { [K in keyof typeof userDataSchema]: string }
+export type UserData = { [K in keyof typeof userDataSchema]: string | undefined }
 
 export const groupApi = (db: Firestore) => {
   const group = (collectionId: string) => {
