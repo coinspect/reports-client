@@ -230,9 +230,17 @@ interface StorageApi {
 }
 
 export const storageApi = (storage: FirebaseStorage): StorageApi => {
-  const download = async (path: string) => {
+  const download = async (path: string, timeout = 10000): Promise<string> => {
     const fileRef = ref(storage, path)
-    return getDownloadURL(fileRef)
+
+    const timeoutPromise: Promise<string> = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Timed out while getting download url')), timeout)
+    )
+
+    return Promise.race([
+      getDownloadURL(fileRef),
+      timeoutPromise
+    ])
   }
   const upload = async (path: string, bytes: Uint8Array, metadata?: UploadMetadata) => {
     const fileRef = ref(storage, path)
