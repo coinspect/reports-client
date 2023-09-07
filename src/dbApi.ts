@@ -24,7 +24,9 @@ import {
   runTransaction,
   serverTimestamp,
   arrayUnion,
-  arrayRemove
+  arrayRemove,
+  getDocsFromServer,
+  getDocFromServer
 } from 'firebase/firestore'
 
 import {
@@ -107,8 +109,8 @@ type CollectionList = {
 type LockedUpdateCallBack = (data: DbDoc) => Promise<DbDoc>
 
 export type CollectionMethods = {
-  list: (whereArgs?: WhereArgs | undefined) => Promise<any[]>
-  get: (id: string) => Promise<DbDoc | undefined>
+  list: (whereArgs?: WhereArgs | undefined, forceServer? : boolean) => Promise<any[]>
+  get: (id: string, forceServer? : boolean) => Promise<DbDoc | undefined>
   create: (data: DbDoc) => Promise<string>
   update: (id: string, data: {}, path?: string[] | string) => Promise<void>
   addToArray: (id: string, value: string | number, path: string[] | string) => Promise<void>
@@ -119,17 +121,17 @@ export type CollectionMethods = {
   lockedUpdate: (id: string, cb: LockedUpdateCallBack) => Promise<void>
 }
 
-const listDocuments = async (q: Query): Promise<any[]> => {
-  const snp = await getDocs(q)
+const listDocuments = async (q: Query, forceServer = false): Promise<any[]> => {
+  const snp = await (forceServer? getDocsFromServer(q) : getDocs(q))
   return snp.docs.map((doc) => getSnapData(doc))
 }
 
 export const collectionApi = (db: Firestore, col: CollectionReference): CollectionMethods => {
   const getDocRef = (id: string) => doc(col, id)
-  const getSnapshot = (id: string) => getDoc(getDocRef(id))
+  const getSnapshot = (id: string, forceServer = false) => forceServer? getDocFromServer(getDocRef(id)) : getDoc(getDocRef(id))
 
-  const list = async (whereArgs?: undefined | WhereArgs): Promise<any[]> =>
-    listDocuments(createQuery(col, whereArgs))
+  const list = async (whereArgs?: undefined | WhereArgs, forceServer = false): Promise<any[]> =>
+    listDocuments(createQuery(col, whereArgs), forceServer)
 
   const create = async (data: {}) => {
     const ref = await addDoc(col, data)
@@ -163,8 +165,8 @@ export const collectionApi = (db: Firestore, col: CollectionReference): Collecti
     return updateDoc(ref, fp, arrayRemove(value))
   }
 
-  const get = async (id: string): Promise<any> => {
-    const snap = await getSnapshot(id)
+  const get = async (id: string, forceServer = false): Promise<any> => {
+    const snap = await getSnapshot(id, forceServer)
     return getSnapData(snap)
   }
 
