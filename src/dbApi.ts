@@ -26,7 +26,8 @@ import {
   arrayUnion,
   arrayRemove,
   getDocsFromServer,
-  getDocFromServer
+  getDocFromServer,
+  FirestoreError
 } from 'firebase/firestore'
 
 import {
@@ -115,8 +116,8 @@ export type CollectionMethods = {
   update: (id: string, data: {}, path?: string[] | string) => Promise<void>
   addToArray: (id: string, value: string | number, path: string[] | string) => Promise<void>
   removeFromArray: (id: string, value: string | number, path: string[] | string) => Promise<void>
-  subscribe: (cb: (doc: {}) => void, whereArgs?: WhereArgs) => Unsubscribe
-  subscribeDoc: (id: string, cb: (doc: {}) => void) => Promise<Unsubscribe>
+  subscribe: (cb: (doc: {}) => void, whereArgs?: WhereArgs, errorCb?: (error: FirestoreError) => void) => Unsubscribe
+  subscribeDoc: (id: string, cb: (doc: {}) => void, errorCb?: (error: FirestoreError) => void) => Promise<Unsubscribe>
   remove: (id: string) => Promise<void>
   lockedUpdate: (id: string, cb: LockedUpdateCallBack) => Promise<void>
 }
@@ -170,19 +171,19 @@ export const collectionApi = (db: Firestore, col: CollectionReference): Collecti
     return getSnapData(snap)
   }
 
-  const subscribe = (cb: Function, whereArgs?: WhereArgs) => {
+  const subscribe = (cb: Function, whereArgs?: WhereArgs, errorCb = (error: FirestoreError) => {return}) => {
     const q = createQuery(col, whereArgs)
     const unsub = onSnapshot(q, () => {
       cb()
-    })
+    }, errorCb)
     return unsub
   }
 
-  const subscribeDoc = async (id: string, cb: Function) => {
+  const subscribeDoc = async (id: string, cb: Function, errorCb = (error: FirestoreError) => {return}) => {
     const docr = await getDocRef(id)
     const unsub = onSnapshot(docr, (doc) => {
       cb(getSnapData(doc))
-    })
+    }, errorCb)
     return unsub
   }
 
