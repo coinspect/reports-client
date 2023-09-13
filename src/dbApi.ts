@@ -192,22 +192,26 @@ export const collectionApi = (db: Firestore, col: CollectionReference): Collecti
     await deleteDoc(docr)
   }
 
-  const lockedUpdate = async (id: string, cb: LockedUpdateCallBack) => {
-    try {
-      const docr = await getDocRef(id)
-      await runTransaction(db, async (transaction) => {
-        const sfDoc = await transaction.get(docr)
-        if (!sfDoc.exists()) {
-          throw new Error('Document does not exist!')
-        }
-        const data = sfDoc.data()
-        const newData = await cb(data)
-        newData.updatedAt = serverTimestamp()
-        transaction.update(docr, newData)
-      })
-    } catch (err) {
-      return Promise.reject(err)
-    }
+
+  const lockedUpdate = async (id: string, cb: LockedUpdateCallBack, timeout = 15000) => {
+    const docr = await getDocRef(id)
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => {
+        reject(new Error('Transaction timed out'))
+      }, timeout)
+    })
+    const sfDocPromise = runTransaction(db, async (transaction) => {
+      const sfDoc = await transaction.get(docr)
+      if (!sfDoc.exists()) {
+        throw new Error('Document does not exist!')
+      }
+      const data = sfDoc.data()
+      const newData = await cb(data)
+      newData.updatedAt = serverTimestamp()
+      transaction.update(docr, newData)
+      return sfDoc
+    })
+    await Promise.race([sfDocPromise, timeoutPromise])
   }
 
   return Object.freeze({
