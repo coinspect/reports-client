@@ -148,7 +148,7 @@ export const collectionApi = (db: Firestore, col: CollectionReference): Collecti
     return fp ? updateDoc(ref, fp, data) : updateDoc(ref, data)
   }
 
-  const addToArray = async(id: string, value: string | number, path: string[] | string) => {
+  const addToArray = async(id: string, value: any, path: string[] | string) => {
     if (!id) {
       throw new Error('Missing id')
     }
@@ -157,7 +157,7 @@ export const collectionApi = (db: Firestore, col: CollectionReference): Collecti
     return updateDoc(ref, fp, arrayUnion(value))
   }
 
-  const removeFromArray = async(id: string, value: string | number, path: string[] | string) => {
+  const removeFromArray = async(id: string, value: any, path: string[] | string) => {
     if (!id) {
       throw new Error('Missing id')
     }
