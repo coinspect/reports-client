@@ -17,14 +17,14 @@ export const getUserData = async (user: User | undefined | null) => {
   if (!user) {
     return {}
   }
-  const { email, displayName: name, refreshToken } = user
+  const { email, displayName: name, refreshToken, uid } = user
   let idToken = undefined
   try {
     idToken = await user.getIdToken()
   } catch(error) {
     console.log('Failed getting id token', error)
   }
-  return { email: `${email}`, name: `${name}`, idToken, refreshToken }
+  return { email: `${email}`, name: `${name}`, idToken, refreshToken, uid}
 }
 
 export const singInWithIdToken = async (
