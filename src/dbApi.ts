@@ -119,7 +119,7 @@ export type CollectionMethods = {
   subscribe: (cb: (doc: {}) => void, whereArgs?: WhereArgs, errorCb?: (error: FirestoreError) => void) => Unsubscribe
   subscribeDoc: (id: string, cb: (doc: {}) => void, errorCb?: (error: FirestoreError) => void) => Promise<Unsubscribe>
   remove: (id: string) => Promise<void>
-  lockedUpdate: (id: string, cb: LockedUpdateCallBack) => Promise<void>
+  lockedUpdate: (id: string, cb: LockedUpdateCallBack, timeout: number, createIfMissing: boolean) => Promise<void>
 }
 
 const listDocuments = async (q: Query, forceServer = false): Promise<any[]> => {
@@ -193,7 +193,7 @@ export const collectionApi = (db: Firestore, col: CollectionReference): Collecti
   }
 
 
-  const lockedUpdate = async (id: string, cb: LockedUpdateCallBack, timeout = 15000) => {
+  const lockedUpdate = async (id: string, cb: LockedUpdateCallBack, timeout = 15000, createIfMissing = false) => {
     const docr = await getDocRef(id)
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => {
@@ -202,10 +202,10 @@ export const collectionApi = (db: Firestore, col: CollectionReference): Collecti
     })
     const sfDocPromise = runTransaction(db, async (transaction) => {
       const sfDoc = await transaction.get(docr)
-      if (!sfDoc.exists()) {
+      if (!sfDoc.exists() && !createIfMissing) {
         throw new Error('Document does not exist!')
       }
-      const data = sfDoc.data()
+      const data = sfDoc.exists()? sfDoc.data() : {}
       const newData = await cb(data)
       newData.updatedAt = serverTimestamp()
       transaction.update(docr, newData)
