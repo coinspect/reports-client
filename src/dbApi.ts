@@ -208,7 +208,7 @@ export const collectionApi = (db: Firestore, col: CollectionReference): Collecti
       const data = sfDoc.exists()? sfDoc.data() : {}
       const newData = await cb(data)
       newData.updatedAt = serverTimestamp()
-      transaction.update(docr, newData)
+      createIfMissing? transaction.set(docr, newData) : transaction.update(docr, newData)
       return sfDoc
     })
     await Promise.race([sfDocPromise, timeoutPromise])
