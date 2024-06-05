@@ -193,7 +193,7 @@ export const collectionApi = (db: Firestore, col: CollectionReference): Collecti
   }
 
 
-  const lockedUpdate = async (id: string, cb: LockedUpdateCallBack, timeout = 15000, createIfMissing = false) => {
+  const lockedUpdate = async (id: string, cb: LockedUpdateCallBack, timeout = 15000, createIfMissing = false, maxAttempts = 5) => {
     const docr = await getDocRef(id)
     const timeoutPromise = new Promise((_, reject) => {
       setTimeout(() => {
@@ -210,6 +210,8 @@ export const collectionApi = (db: Firestore, col: CollectionReference): Collecti
       newData.updatedAt = serverTimestamp()
       createIfMissing? transaction.set(docr, newData) : transaction.update(docr, newData)
       return sfDoc
+    }, {
+      maxAttempts
     })
     await Promise.race([sfDocPromise, timeoutPromise])
   }
