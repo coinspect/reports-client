@@ -119,7 +119,7 @@ export type CollectionMethods = {
   subscribe: (cb: (doc: {}) => void, whereArgs?: WhereArgs, errorCb?: (error: FirestoreError) => void) => Unsubscribe
   subscribeDoc: (id: string, cb: (doc: {}) => void, errorCb?: (error: FirestoreError) => void) => Promise<Unsubscribe>
   remove: (id: string) => Promise<void>
-  lockedUpdate: (id: string, cb: LockedUpdateCallBack, timeout?: number, createIfMissing?: boolean) => Promise<void>
+  lockedUpdate: (id: string, cb: LockedUpdateCallBack, timeout?: number, createIfMissing?: boolean, maxAttempts?: number) => Promise<void>
 }
 
 const listDocuments = async (q: Query, forceServer = false): Promise<any[]> => {
